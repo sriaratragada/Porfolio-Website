@@ -4,11 +4,10 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
-import ManhattanBackground  from './ManhattanBackground';
-import CharacterStage       from './CharacterStage';
-import StageEnvironment     from './StageEnvironment';
-import SceneLighting        from './SceneLighting';
-import CameraController     from './CameraController';
+import ManhattanBackground   from './ManhattanBackground';
+import CharacterStage        from './CharacterStage';
+import SceneLighting         from './SceneLighting';
+import CameraController      from './CameraController';
 import PostProcessingEffects from './PostProcessing';
 
 export default function SceneCanvas() {
@@ -36,10 +35,7 @@ export default function SceneCanvas() {
           <ManhattanBackground />
         </Suspense>
 
-        {/* Phase 1-3: Stage environment — floor, rings, atmosphere */}
-        <StageEnvironment />
-
-        {/* Phase 1-3: Spinning character models */}
+        {/* Phase 1-3: Environment models */}
         <Suspense fallback={null}>
           <CharacterStage />
         </Suspense>

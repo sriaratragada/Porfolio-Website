@@ -11,17 +11,23 @@ export const scrollStore = {
 // ── Phase configuration ───────────────────────────────────────────────────────
 // Phase 0: Manhattan city zoom-in
 // Phase 1: Battle Bus — flows in from the Manhattan sky
-// Phase 2: Symbiote  — Spider-Man black suit turntable
-// Phase 3: Gojo      — Satoru Gojo, Shinjuku battle
+// Phase 2: Dragon — fantasy environment orbit
+// Phase 3: Anime sky — camera drift inside a skybox
+// Phase 4: Above clouds — 360 skybox orbit
+// Phase 5: Enchanted forest — 360 skybox orbit
+// Phase 6: Star Destroyer hangar — 360 environment orbit
 export const PHASES = [
-  { id: 'manhattan', start: 0.00, end: 0.22 },
-  { id: 'battlebus', start: 0.22, end: 0.47 },
-  { id: 'symbiote',  start: 0.47, end: 0.73 },
-  { id: 'gojo',      start: 0.73, end: 1.00 },
+  { id: 'manhattan', start: 0.00, end: 0.14 },
+  { id: 'battlebus', start: 0.14, end: 0.28 },
+  { id: 'dragon',    start: 0.28, end: 0.42 },
+  { id: 'anime-sky', start: 0.42, end: 0.56 },
+  { id: 'clouds',    start: 0.56, end: 0.70 },
+  { id: 'forest',    start: 0.70, end: 0.84 },
+  { id: 'hangar',    start: 0.84, end: 1.00 },
 ] as const;
 
 // Transition center points (where the black flash peaks)
-export const TRANSITIONS = [0.22, 0.47, 0.73];
+export const TRANSITIONS = [0.14, 0.28, 0.42, 0.56, 0.70, 0.84];
 
 // ── Helper: compute opacity for a phase element ────────────────────────────
 // Returns 0→1→0 as globalProgress moves through the phase.

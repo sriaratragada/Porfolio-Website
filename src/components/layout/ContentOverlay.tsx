@@ -2,12 +2,13 @@
 
 // ── Content Overlay ────────────────────────────────────────────────────────────
 // Fixed-position HTML layer that sits over the 3D canvas.
-// Four phases — each has 3D CSS text (CSS perspective + translateZ).
+// Seven phases — each has 3D CSS text (CSS perspective + translateZ).
 // Transition flash: black overlay peaks at each phase boundary.
 // All text uses GSAP ScrollTrigger driven by the scroll container.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useEffect, useRef, type ReactNode } from 'react';
+import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 
@@ -168,8 +169,8 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
     gsap.from(ctaRef.current,   { transformPerspective: P, z: -200, opacity: 0, duration: 0.9, delay: 0.75, ease: 'power3.out' });
 
     // Scroll exit: depth layers + fade
-    const PHASE_END = 22;
-    const EXIT_START = 14;
+    const PHASE_END = 14;
+    const EXIT_START = 9;
 
     const stActive = ScrollTrigger.create({
       trigger: scrollEl,
@@ -243,21 +244,21 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
         >
           EXPLORE
         </a>
-        <a
+        <Link
           href="/blog"
           style={{ fontFamily: 'var(--font-bebas)', fontSize: '13px', letterSpacing: '0.15em', padding: '10px 22px', border: '2px solid rgba(240,240,240,0.3)', background: 'transparent', color: 'rgba(240,240,240,0.6)', textDecoration: 'none', transition: 'border-color 0.2s, color 0.2s' }}
           onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#f0f0f0'; (e.currentTarget as HTMLElement).style.color = '#f0f0f0'; }}
           onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(240,240,240,0.3)'; (e.currentTarget as HTMLElement).style.color = 'rgba(240,240,240,0.6)'; }}
         >
           BLOG
-        </a>
+        </Link>
       </div>
     </div>
   );
 }
 
 // ── Phase transition flash overlay ────────────────────────────────────────
-// Peaks black at each phase boundary (0.22, 0.47, 0.73 of scroll).
+// Peaks black at each phase boundary.
 function TransitionFlash({ scrollEl }: { scrollEl: HTMLElement | null }) {
   const flashRef = useRef<HTMLDivElement>(null);
 
@@ -265,7 +266,7 @@ function TransitionFlash({ scrollEl }: { scrollEl: HTMLElement | null }) {
     if (!scrollEl || !flashRef.current) return;
 
     // Phase boundaries as percentage of scroll
-    const transitions = [22, 47, 73];
+    const transitions = [14, 28, 42, 56, 70, 84];
     const HALF_WIDTH  = 3; // ±3% around boundary = 6% total flash window
 
     const triggers = transitions.map((center) =>
@@ -335,19 +336,14 @@ function ScrollIndicator({ scrollEl }: { scrollEl: HTMLElement | null }) {
 
 // ── Phase progress dots ──────────────────────────────────────────────────
 function PhaseDots({ scrollEl }: { scrollEl: HTMLElement | null }) {
-  const dotRefs = [
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-    useRef<HTMLDivElement>(null),
-  ];
+  const dotRefs = useRef<Array<HTMLDivElement | null>>([]);
 
   useEffect(() => {
     if (!scrollEl) return;
-    const CENTERS = [11, 34, 60, 86]; // midpoints of each phase
+    const CENTERS = [7, 21, 35, 49, 63, 77, 92]; // midpoints of each phase
 
     const triggers = CENTERS.map((center, i) => {
-      const dot = dotRefs[i].current;
+      const dot = dotRefs.current[i];
       if (!dot) return null;
 
       return ScrollTrigger.create({
@@ -356,7 +352,6 @@ function PhaseDots({ scrollEl }: { scrollEl: HTMLElement | null }) {
         end:   `${center + 10}% top`,
         scrub: 0.5,
         onUpdate: (self) => {
-          const scale = 1 + self.progress * 0.4 * (self.progress < 0.5 ? 1 : 2 - self.progress * 2);
           if (dot) {
             dot.style.background = self.progress > 0 && self.progress < 1 ? '#e62429' : 'rgba(255,255,255,0.3)';
           }
@@ -369,10 +364,12 @@ function PhaseDots({ scrollEl }: { scrollEl: HTMLElement | null }) {
 
   return (
     <div style={{ position: 'fixed', right: '24px', top: '50%', transform: 'translateY(-50%)', display: 'flex', flexDirection: 'column', gap: '10px', zIndex: 20, pointerEvents: 'none' }}>
-      {dotRefs.map((ref, i) => (
+      {Array.from({ length: 7 }, (_, i) => (
         <div
           key={i}
-          ref={ref}
+          ref={(node) => {
+            dotRefs.current[i] = node;
+          }}
           style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? '#e62429' : 'rgba(255,255,255,0.3)', transition: 'background 0.3s' }}
         />
       ))}
@@ -395,8 +392,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 1 — Battle Bus: About Me */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={22}
-        phaseEnd={47}
+        phaseStart={14}
+        phaseEnd={28}
         label="ABOUT ME — PHASE 01"
         title={"WHO\nI AM"}
         align="left"
@@ -417,8 +414,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 2 — Symbiote Spider-Man: Experience */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={47}
-        phaseEnd={73}
+        phaseStart={28}
+        phaseEnd={42}
         label="EXPERIENCE — PHASE 02"
         title={"THE\nJOURNEY"}
         align="left"
@@ -439,8 +436,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 3 — Gojo: Projects */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={73}
-        phaseEnd={100}
+        phaseStart={42}
+        phaseEnd={56}
         label="PROJECTS — PHASE 03"
         title={"WHAT\nI BUILT"}
         align="left"
@@ -461,6 +458,48 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
             </div>
           </div>
         ))}
+      </PhasePanel>
+
+      {/* Phase 4 — Above the Clouds */}
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={56}
+        phaseEnd={70}
+        label="SKYBOX — PHASE 04"
+        title={"ABOVE\nCLOUDS"}
+        align="right"
+      >
+        <p style={{ fontFamily: 'var(--font-comic)' }}>
+          A 360-degree cloud scene using the same orbital camera language as the Battle Bus section.
+        </p>
+      </PhasePanel>
+
+      {/* Phase 5 — Enchanted Forest */}
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={70}
+        phaseEnd={84}
+        label="SKYBOX — PHASE 05"
+        title={"ENCHANTED\nFOREST"}
+        align="left"
+      >
+        <p style={{ fontFamily: 'var(--font-comic)' }}>
+          The camera keeps circling while the environment fades in, scales subtly, and fills the viewport.
+        </p>
+      </PhasePanel>
+
+      {/* Phase 6 — Imperial Hangar */}
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={84}
+        phaseEnd={100}
+        label="HANGAR — PHASE 06"
+        title={"STAR\nDESTROYER"}
+        align="right"
+      >
+        <p style={{ fontFamily: 'var(--font-comic)' }}>
+          A wider orbit gives the hangar more room, so lowering the phase radius will push the camera closer.
+        </p>
       </PhasePanel>
 
       {/* Phase progress dots */}

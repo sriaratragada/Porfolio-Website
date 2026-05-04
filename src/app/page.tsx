@@ -1,7 +1,7 @@
 'use client';
 
 // ── Page ─────────────────────────────────────────────────────────────────────
-// Single 500vh scroll container — the whole portfolio is one cinematic journey.
+// Single scroll container — the whole portfolio is one cinematic journey.
 // ContentOverlay reads the scroll element ref to set up ScrollTrigger.
 // The 3D canvas (fixed, z-0) is always behind; text overlays in front.
 // ─────────────────────────────────────────────────────────────────────────────
@@ -21,8 +21,8 @@ export default function Home() {
 
   return (
     <>
-      {/* 900vh — each of the 4 phases gets ~225vh of comfortable scroll travel */}
-      <div ref={scrollRef} style={{ height: '900vh' }} />
+      {/* 1400vh — seven phases with comfortable scroll travel for each scene */}
+      <div ref={scrollRef} style={{ height: '1400vh' }} />
 
       {/* Fixed overlay: text panels + transition flashes + letterbox bars */}
       <ContentOverlay scrollEl={scrollEl} />

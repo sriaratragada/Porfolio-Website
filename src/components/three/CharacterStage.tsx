@@ -1,13 +1,13 @@
 'use client';
 
 // ── Character Stage ───────────────────────────────────────────────────────────
-// Nicknames & phase order:
-//   "Bus"     = battle-bus.glb            (phase 1) — drop-in, hover, no spin
-//   "Symbiote"= spider-man_symbiote.glb   (phase 2) — full turntable spin
-//   "Gojo"    = gojo.glb                  (phase 3) — slow spin, faces front
+// Environment GLBs:
+//   "Bus"    = battle-bus.glb         (phase 1) — drop-in, hover bob, orbit cam
+//   "Dragon" = wrath_of_the_dragon    (phase 2) — slow self-rotation, orbit cam
+//   "Sky"    = anime_sky.glb          (phase 3) — large skybox, cam drifts inside
+//   Later 360 GLBs mirror the Battle Bus fade/scale pattern farther down-page.
 //
-// Each model auto-scales to its targetHeight and centers on its bounding box.
-// Bus gets a dramatic drop-in entrance then gentle hover bob.
+// Environments skip the scale-pulse used for character models (isEnv: true).
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useRef, useEffect } from 'react';
@@ -16,58 +16,89 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
-const SPIN_SPEED = 0.22; // rad/s for Symbiote and Gojo
-
-// Per-character config
 const MODELS = [
   {
-    nickname:    'Bus',
-    path:        '/models/battle-bus.glb',
-    phaseIndex:  1,
-    draco:       true,
-    spinMult:    0.0,
-    hover:       true,
-    targetHeight: 6,    // bus body as focal point; sky sphere extends well beyond orbit
-    tint: { emissive: '#2a1a00', emissiveIntensity: 0.10 },
+    nickname:     'Bus',
+    path:         '/models/battle-bus.glb',
+    phaseIndex:   1,
+    draco:        true,
+    isEnv:        true,
+    spinMult:     0,
+    hover:        true,
+    targetHeight: 6,
+    tint: { emissive: '#1a1000', emissiveIntensity: 0.08 },
   },
   {
-    nickname:    'Symbiote',
-    path:        '/models/spider-man_symbiote.glb',
-    phaseIndex:  2,
-    draco:       false,
-    spinMult:    1.0,
-    hover:       false,
-    targetHeight: 7.5,
-    tint: { emissive: '#1a3a6e', emissiveIntensity: 0.18 },
+    nickname:     'Dragon',
+    path:         '/models/wrath_of_the_dragon.glb',
+    phaseIndex:   2,
+    draco:        true,
+    isEnv:        true,
+    spinMult:     0.04,  // very slow environment rotation
+    hover:        false,
+    targetHeight: 10,
+    tint: { emissive: '#2a0500', emissiveIntensity: 0.10 },
   },
   {
-    nickname:    'Gojo',
-    path:        '/models/gojo.glb',
-    phaseIndex:  3,
-    draco:       true,
-    spinMult:    0.28,
-    hover:       false,
-    targetHeight: 7.5,
-    tint: { emissive: '#0a0a50', emissiveIntensity: 0.20 },
+    nickname:     'Sky',
+    path:         '/models/anime_sky.glb',
+    phaseIndex:   3,
+    draco:        true,
+    isEnv:        true,
+    spinMult:     0,
+    hover:        false,
+    targetHeight: 60,   // camera lives inside this skybox
+    tint: { emissive: '#050d1a', emissiveIntensity: 0.04 },
+  },
+  {
+    nickname:     'Clouds',
+    path:         '/models/skybox-above-clouds.glb',
+    phaseIndex:   4,
+    draco:        true,
+    isEnv:        true,
+    spinMult:     0,
+    hover:        false,
+    targetHeight: 70,
+    tint: { emissive: '#101822', emissiveIntensity: 0.05 },
+  },
+  {
+    nickname:     'Forest',
+    path:         '/models/skybox-enchanted-forest.glb',
+    phaseIndex:   5,
+    draco:        true,
+    isEnv:        true,
+    spinMult:     0,
+    hover:        false,
+    targetHeight: 64,
+    tint: { emissive: '#06170c', emissiveIntensity: 0.07 },
+  },
+  {
+    nickname:     'Hangar',
+    path:         '/models/star-destroyer-hangar.glb',
+    phaseIndex:   6,
+    draco:        true,
+    isEnv:        true,
+    spinMult:     0.015,
+    hover:        false,
+    targetHeight: 22,
+    tint: { emissive: '#080d14', emissiveIntensity: 0.08 },
   },
 ] as const;
 
 type ModelConfig = typeof MODELS[number];
 
-// Easing: cubic out — fast start, smooth landing
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-function CharacterModel({ config }: { config: ModelConfig }) {
-  const { scene }      = useGLTF(config.path, config.draco);
-  const groupRef       = useRef<THREE.Group>(null);
-  const spinY          = useRef(0);
-  const hoverOffset    = useRef(Math.random() * Math.PI * 2);
-  const lastOpacity    = useRef(-1);
-  // Drop-in state for the Bus
-  const dropTimer      = useRef(0);
-  const wasVisible     = useRef(false);
+function EnvironmentModel({ config }: { config: ModelConfig }) {
+  const { scene }    = useGLTF(config.path, config.draco);
+  const groupRef     = useRef<THREE.Group>(null);
+  const spinY        = useRef(0);
+  const hoverOffset  = useRef(config.nickname.length * 0.731);
+  const lastOpacity  = useRef(-1);
+  const dropTimer    = useRef(0);
+  const wasVisible   = useRef(false);
 
   useEffect(() => {
     const box    = new THREE.Box3().setFromObject(scene);
@@ -83,7 +114,6 @@ function CharacterModel({ config }: { config: ModelConfig }) {
     );
 
     const emissiveColor = new THREE.Color(config.tint.emissive);
-
     scene.traverse((child) => {
       if (!(child as THREE.Mesh).isMesh) return;
       const mesh = child as THREE.Mesh;
@@ -121,37 +151,27 @@ function CharacterModel({ config }: { config: ModelConfig }) {
       });
     }
 
-    // ── Scale ────────────────────────────────────────────────────
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.88, 1.22, pp));
+    // Environments stay at scale 1 — no dramatic scale pulse
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
 
-    // ── Rotation / hover ─────────────────────────────────────────
+    // ── Hover (Bus only) ─────────────────────────────────────────
     if (config.hover) {
       const isVisible = opacity > 0.001;
-
-      // Reset drop timer when phase becomes active again from scratch
-      if (isVisible && !wasVisible.current) {
-        dropTimer.current = 0;
-      }
+      if (isVisible && !wasVisible.current) dropTimer.current = 0;
       wasVisible.current = isVisible;
+      if (isVisible) dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
 
-      if (isVisible) {
-        dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
-      }
-
-      // Drop from y=28 → 0 over 1.4 seconds, then hover bob on top
-      const DROP_HEIGHT = 20;
-      const DROP_DURATION = 1.4;
-      const dropT   = easeOutCubic(Math.min(1, dropTimer.current / DROP_DURATION));
-      const dropY   = THREE.MathUtils.lerp(DROP_HEIGHT, 0, dropT);
-
+      const dropT = easeOutCubic(Math.min(1, dropTimer.current / 1.4));
+      const dropY = THREE.MathUtils.lerp(20, 0, dropT);
       hoverOffset.current += delta * 0.8;
-      const hoverY = Math.sin(hoverOffset.current) * 0.35;
-
-      groupRef.current.position.y = dropY + hoverY;
+      groupRef.current.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
       groupRef.current.rotation.y = 0;
-    } else if (config.spinMult > 0) {
-      const nearTransition = [0.22, 0.47, 0.73].some(t => Math.abs(gp - t) < 0.03);
-      spinY.current += delta * SPIN_SPEED * config.spinMult * (nearTransition ? 2.2 : 1.0);
+      return;
+    }
+
+    // ── Slow environment spin (Dragon) ───────────────────────────
+    if (config.spinMult > 0) {
+      spinY.current += delta * config.spinMult;
       groupRef.current.rotation.y = spinY.current;
     }
   });
@@ -167,12 +187,15 @@ export default function CharacterStage() {
   return (
     <>
       {MODELS.map((m) => (
-        <CharacterModel key={m.path} config={m} />
+        <EnvironmentModel key={m.path} config={m} />
       ))}
     </>
   );
 }
 
-useGLTF.preload('/models/battle-bus.glb',          true);
-useGLTF.preload('/models/spider-man_symbiote.glb');
-useGLTF.preload('/models/gojo.glb',                true);
+useGLTF.preload('/models/battle-bus.glb',              true);
+useGLTF.preload('/models/wrath_of_the_dragon.glb',     true);
+useGLTF.preload('/models/anime_sky.glb',               true);
+useGLTF.preload('/models/skybox-above-clouds.glb',     true);
+useGLTF.preload('/models/skybox-enchanted-forest.glb', true);
+useGLTF.preload('/models/star-destroyer-hangar.glb',   true);
