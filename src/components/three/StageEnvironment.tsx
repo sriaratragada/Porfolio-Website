@@ -14,11 +14,12 @@ import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { scrollStore, PHASES } from '@/lib/scrollStore';
 
-// Subtle accent colors — desaturated so they don't overwhelm
+// Per-character accent colors matching CHAR_TINT in CharacterStage
+// Symbiote → cold blue  |  Classic → muted red  |  Luke → warm amber
 const PHASE_COLORS = [
-  new THREE.Color('#6a0a14'), // phase 1 — deep muted red
-  new THREE.Color('#0d3a66'), // phase 2 — deep navy blue
-  new THREE.Color('#3d2a0a'), // phase 3 — warm dark amber (NOT gold)
+  new THREE.Color('#1a3a6e'), // Symbiote — cold steel blue
+  new THREE.Color('#6e1a1a'), // Classic  — deep crimson
+  new THREE.Color('#5a3a10'), // Luke     — warm amber
 ];
 
 function getPhaseColor(gp: number): THREE.Color {

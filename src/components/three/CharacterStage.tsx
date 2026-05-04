@@ -1,10 +1,15 @@
 'use client';
 
 // ── Character Stage ───────────────────────────────────────────────────────────
-// Three models: Symbiote Spidey → Classic MCU Spidey → Luke Skywalker.
-// Symbiote spins fast. Classic spins slowly (centered turntable).
-// Luke holds a fixed front-facing angle with a subtle sway.
-// All models scale 0.85→1.2 as phaseProgress goes 0→1.
+// Nicknames:
+//   "Symbiote" = spider-man_symbiote.glb  (black suit, phase 1) — spins full speed
+//   "Classic"  = spider-man-classic.glb   (MCU red/blue, phase 2) — slow turn
+//   "Luke"     = luke-skywalker.glb       (Mandalorian, phase 3) — faces camera, sways
+//
+// Each model gets a distinct emissive tint applied to its materials:
+//   Symbiote → cold blue-white edge (venom-esque)
+//   Classic  → warm red-blue split
+//   Luke     → warm amber
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useRef, useEffect } from 'react';
@@ -13,17 +18,26 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
-const TARGET_HEIGHT = 7.5; // world units — large and heroic
-const SPIN_SPEED    = 0.28; // base rad/s (symbiote)
+const TARGET_HEIGHT = 7.5;
+const SPIN_SPEED    = 0.28;
 
-// Luke's Y rotation: at π he faced +X (sideways); front vector = (-1,0,0) at rot=0
-// To face +Z (camera): sin(r)=1 → r = π/2
-const LUKE_FACING_OFFSET = Math.PI / 2;
+// Luke confirmed by user: 3π/2 faces toward camera
+const LUKE_FACING_OFFSET = Math.PI * 1.5;
+
+// Per-character visual identity
+const CHAR_TINT: Record<number, { emissive: string; emissiveIntensity: number }> = {
+  // Symbiote: cold steel-blue edge glow — symbiote energy
+  1: { emissive: '#1a3a6e', emissiveIntensity: 0.18 },
+  // Classic MCU: subtle warm red — signature Spidey red
+  2: { emissive: '#6e1a1a', emissiveIntensity: 0.14 },
+  // Luke: warm amber — Mandalorian/Jedi warmth
+  3: { emissive: '#5a3a10', emissiveIntensity: 0.12 },
+};
 
 const MODELS = [
-  { path: '/models/spider-man_symbiote.glb', phaseIndex: 1, draco: false, spinMult: 1.0 },
-  { path: '/models/spider-man-classic.glb',  phaseIndex: 2, draco: true,  spinMult: 0.35 }, // slow, centered
-  { path: '/models/luke-skywalker.glb',      phaseIndex: 3, draco: true,  spinMult: 0.0  }, // no spin
+  { path: '/models/spider-man_symbiote.glb', phaseIndex: 1, draco: false, spinMult: 1.0  }, // Symbiote
+  { path: '/models/spider-man-classic.glb',  phaseIndex: 2, draco: true,  spinMult: 0.35 }, // Classic
+  { path: '/models/luke-skywalker.glb',      phaseIndex: 3, draco: true,  spinMult: 0.0  }, // Luke
 ] as const;
 
 interface CharacterModelProps {
@@ -39,7 +53,6 @@ function CharacterModel({ path, phaseIndex, draco, spinMult }: CharacterModelPro
   const spinY       = useRef(phaseIndex === 3 ? LUKE_FACING_OFFSET : 0);
   const lastOpacity = useRef(-1);
 
-  // Auto-scale & center from bounding box
   useEffect(() => {
     const box    = new THREE.Box3().setFromObject(scene);
     const size   = box.getSize(new THREE.Vector3());
@@ -47,11 +60,10 @@ function CharacterModel({ path, phaseIndex, draco, spinMult }: CharacterModelPro
     const scale  = TARGET_HEIGHT / size.y;
 
     scene.scale.setScalar(scale);
-    scene.position.set(
-      -center.x * scale,  // center X on bounding box midpoint
-      -box.min.y * scale, // feet at y=0
-      -center.z * scale
-    );
+    scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+
+    const tint = CHAR_TINT[phaseIndex];
+    const emissiveColor = new THREE.Color(tint.emissive);
 
     scene.traverse((child) => {
       if ((child as THREE.Mesh).isMesh) {
@@ -60,10 +72,15 @@ function CharacterModel({ path, phaseIndex, draco, spinMult }: CharacterModelPro
         for (const mat of mats as THREE.MeshStandardMaterial[]) {
           mat.transparent = true;
           mat.depthWrite  = false;
+          // Apply per-character identity tint
+          if (mat.emissive !== undefined) {
+            mat.emissive.copy(emissiveColor);
+            mat.emissiveIntensity = tint.emissiveIntensity;
+          }
         }
       }
     });
-  }, [scene]);
+  }, [scene, phaseIndex]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
@@ -88,12 +105,12 @@ function CharacterModel({ path, phaseIndex, draco, spinMult }: CharacterModelPro
       });
     }
 
-    // ── Scale: grows 0.85→1.2 as phase progresses ───────────────
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.85, 1.2, pp));
+    // ── Scale: grows 0.9→1.25 as phase progresses ───────────────
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.9, 1.25, pp));
 
     // ── Rotation ─────────────────────────────────────────────────
     if (phaseIndex === 3) {
-      // Luke: face camera + very slow sway (±12°)
+      // Luke: locked to camera with a subtle breathing sway (±12°)
       const swayTarget = LUKE_FACING_OFFSET + Math.sin(Date.now() * 0.0004) * 0.21;
       spinY.current = THREE.MathUtils.lerp(spinY.current, swayTarget, delta * 2.5);
     } else if (spinMult > 0) {

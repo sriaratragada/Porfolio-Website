@@ -23,11 +23,12 @@ const POD_CONFIGS: Array<{ x: number; z: number; s: number; delay: number }> = [
   { x:  6.2, z: -3.2, s: 0.80, delay: 0.0 },
 ];
 
-const RED  = new THREE.Color('#ff1a2e');
-const BLUE = new THREE.Color('#3399ff');
+// Match CharacterStage CHAR_TINT colors for consistency
+const SYMBIOTE_BLUE = new THREE.Color('#1a3a6e'); // Symbiote — cold steel blue
+const CLASSIC_RED   = new THREE.Color('#6e1a1a'); // Classic  — deep crimson
 
 function getPodColor(gp: number): THREE.Color {
-  return gp < PHASES[2].start ? RED : BLUE;
+  return gp < PHASES[2].start ? SYMBIOTE_BLUE : CLASSIC_RED;
 }
 
 function DisplayPod({
