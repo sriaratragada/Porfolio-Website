@@ -23,12 +23,12 @@ const POD_CONFIGS: Array<{ x: number; z: number; s: number; delay: number }> = [
   { x:  6.2, z: -3.2, s: 0.80, delay: 0.0 },
 ];
 
-// Match CharacterStage CHAR_TINT colors for consistency
-const SYMBIOTE_BLUE = new THREE.Color('#1a3a6e'); // Symbiote — cold steel blue
-const CLASSIC_RED   = new THREE.Color('#6e1a1a'); // Classic  — deep crimson
+// Symbiote (phase 2) → steel blue  |  Gojo (phase 3) → infinity deep blue
+const SYMBIOTE_COLOR = new THREE.Color('#1a3a6e');
+const GOJO_COLOR     = new THREE.Color('#0a0a50');
 
 function getPodColor(gp: number): THREE.Color {
-  return gp < PHASES[2].start ? SYMBIOTE_BLUE : CLASSIC_RED;
+  return gp < PHASES[3].start ? SYMBIOTE_COLOR : GOJO_COLOR;
 }
 
 function DisplayPod({
@@ -129,7 +129,8 @@ export default function SuitWall() {
   useFrame(() => {
     if (!groupRef.current) return;
     const gp = scrollStore.globalProgress;
-    const op = Math.max(phaseOpacity(1, gp, 0.06), phaseOpacity(2, gp, 0.06));
+    // Show for Symbiote (phase 2) and Gojo (phase 3) — not the Bus
+    const op = Math.max(phaseOpacity(2, gp, 0.06), phaseOpacity(3, gp, 0.06));
     groupRef.current.visible = op > 0.01;
     sharedColor.current.lerp(getPodColor(gp), 0.04);
   });

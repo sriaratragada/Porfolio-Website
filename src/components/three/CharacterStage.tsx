@@ -1,15 +1,13 @@
 'use client';
 
 // ── Character Stage ───────────────────────────────────────────────────────────
-// Nicknames:
-//   "Symbiote" = spider-man_symbiote.glb  (black suit, phase 1) — spins full speed
-//   "Classic"  = spider-man-classic.glb   (MCU red/blue, phase 2) — slow turn
-//   "Luke"     = luke-skywalker.glb       (Mandalorian, phase 3) — faces camera, sways
+// Nicknames & phase order:
+//   "Bus"     = battle-bus.glb            (phase 1) — hovers, no spin
+//   "Symbiote"= spider-man_symbiote.glb   (phase 2) — full turntable spin
+//   "Gojo"    = gojo.glb                  (phase 3) — slow spin, faces front
 //
-// Each model gets a distinct emissive tint applied to its materials:
-//   Symbiote → cold blue-white edge (venom-esque)
-//   Classic  → warm red-blue split
-//   Luke     → warm amber
+// Each model auto-scales to its targetHeight and centers on its bounding box.
+// Bus gets a gentle hover bob instead of rotation.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useRef, useEffect } from 'react';
@@ -18,106 +16,117 @@ import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
-const TARGET_HEIGHT = 7.5;
-const SPIN_SPEED    = 0.28;
+const SPIN_SPEED = 0.22; // rad/s for Symbiote and Gojo
 
-// Luke confirmed by user: 3π/2 faces toward camera
-const LUKE_FACING_OFFSET = Math.PI * 1.5;
-
-// Per-character visual identity
-const CHAR_TINT: Record<number, { emissive: string; emissiveIntensity: number }> = {
-  // Symbiote: cold steel-blue edge glow — symbiote energy
-  1: { emissive: '#1a3a6e', emissiveIntensity: 0.18 },
-  // Classic MCU: subtle warm red — signature Spidey red
-  2: { emissive: '#6e1a1a', emissiveIntensity: 0.14 },
-  // Luke: warm amber — Mandalorian/Jedi warmth
-  3: { emissive: '#5a3a10', emissiveIntensity: 0.12 },
-};
-
+// Per-character config
 const MODELS = [
-  { path: '/models/spider-man_symbiote.glb', phaseIndex: 1, draco: false, spinMult: 1.0  }, // Symbiote
-  { path: '/models/spider-man-classic.glb',  phaseIndex: 2, draco: true,  spinMult: 0.35 }, // Classic
-  { path: '/models/luke-skywalker.glb',      phaseIndex: 3, draco: true,  spinMult: 0.0  }, // Luke
+  {
+    nickname:    'Bus',
+    path:        '/models/battle-bus.glb',
+    phaseIndex:  1,
+    draco:       true,
+    spinMult:    0.0,   // buses don't spin
+    hover:       true,  // gentle vertical bob
+    targetHeight: 5.5,  // bus is wide, not tall — scale to match scene
+    tint: { emissive: '#2a1a00', emissiveIntensity: 0.10 }, // warm bus-yellow tint
+  },
+  {
+    nickname:    'Symbiote',
+    path:        '/models/spider-man_symbiote.glb',
+    phaseIndex:  2,
+    draco:       false,
+    spinMult:    1.0,
+    hover:       false,
+    targetHeight: 7.5,
+    tint: { emissive: '#1a3a6e', emissiveIntensity: 0.18 }, // cold blue-white
+  },
+  {
+    nickname:    'Gojo',
+    path:        '/models/gojo.glb',
+    phaseIndex:  3,
+    draco:       true,
+    spinMult:    0.28,
+    hover:       false,
+    targetHeight: 7.5,
+    tint: { emissive: '#0a0a50', emissiveIntensity: 0.20 }, // deep infinity blue
+  },
 ] as const;
 
-interface CharacterModelProps {
-  path: string;
-  phaseIndex: number;
-  draco: boolean;
-  spinMult: number;
-}
+type ModelConfig = typeof MODELS[number];
 
-function CharacterModel({ path, phaseIndex, draco, spinMult }: CharacterModelProps) {
-  const { scene }   = useGLTF(path, draco);
-  const groupRef    = useRef<THREE.Group>(null);
-  const spinY       = useRef(phaseIndex === 3 ? LUKE_FACING_OFFSET : 0);
-  const lastOpacity = useRef(-1);
+function CharacterModel({ config }: { config: ModelConfig }) {
+  const { scene }     = useGLTF(config.path, config.draco);
+  const groupRef      = useRef<THREE.Group>(null);
+  const spinY         = useRef(0);
+  const hoverOffset   = useRef(Math.random() * Math.PI * 2); // random phase so bus doesn't snap
+  const lastOpacity   = useRef(-1);
 
   useEffect(() => {
     const box    = new THREE.Box3().setFromObject(scene);
     const size   = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const scale  = TARGET_HEIGHT / size.y;
+    const scale  = config.targetHeight / size.y;
 
     scene.scale.setScalar(scale);
-    scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+    scene.position.set(
+      -center.x * scale,
+      -box.min.y * scale, // feet / base at y=0
+      -center.z * scale,
+    );
 
-    const tint = CHAR_TINT[phaseIndex];
-    const emissiveColor = new THREE.Color(tint.emissive);
+    const emissiveColor = new THREE.Color(config.tint.emissive);
 
     scene.traverse((child) => {
-      if ((child as THREE.Mesh).isMesh) {
-        const mesh = child as THREE.Mesh;
-        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-        for (const mat of mats as THREE.MeshStandardMaterial[]) {
-          mat.transparent = true;
-          mat.depthWrite  = false;
-          // Apply per-character identity tint
-          if (mat.emissive !== undefined) {
-            mat.emissive.copy(emissiveColor);
-            mat.emissiveIntensity = tint.emissiveIntensity;
-          }
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of mats as THREE.MeshStandardMaterial[]) {
+        m.transparent = true;
+        m.depthWrite  = false;
+        if (m.emissive !== undefined) {
+          m.emissive.copy(emissiveColor);
+          m.emissiveIntensity = config.tint.emissiveIntensity;
         }
       }
     });
-  }, [scene, phaseIndex]);
+  }, [scene, config]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
     const gp      = scrollStore.globalProgress;
-    const opacity = phaseOpacity(phaseIndex, gp, 0.05);
-    const pp      = phaseProgress(phaseIndex, gp);
+    const opacity = phaseOpacity(config.phaseIndex, gp, 0.06);
+    const pp      = phaseProgress(config.phaseIndex, gp);
 
-    // ── Opacity ──────────────────────────────────────────────────
-    if (Math.abs(opacity - lastOpacity.current) > 0.003) {
+    // ── Opacity (smoothstep already applied in phaseOpacity) ─────
+    if (Math.abs(opacity - lastOpacity.current) > 0.002) {
       lastOpacity.current = opacity;
       groupRef.current.visible = opacity > 0.001;
       scene.traverse((child) => {
-        if ((child as THREE.Mesh).isMesh) {
-          const mesh = child as THREE.Mesh;
-          const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
-          for (const mat of mats as THREE.MeshStandardMaterial[]) {
-            mat.opacity    = opacity;
-            mat.depthWrite = opacity > 0.98;
-          }
+        if (!(child as THREE.Mesh).isMesh) return;
+        const mesh = child as THREE.Mesh;
+        const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+        for (const m of mats as THREE.MeshStandardMaterial[]) {
+          m.opacity    = opacity;
+          m.depthWrite = opacity > 0.95;
         }
       });
     }
 
-    // ── Scale: grows 0.9→1.25 as phase progresses ───────────────
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.9, 1.25, pp));
+    // ── Scale ────────────────────────────────────────────────────
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.88, 1.22, pp));
 
-    // ── Rotation ─────────────────────────────────────────────────
-    if (phaseIndex === 3) {
-      // Luke: locked to camera with a subtle breathing sway (±12°)
-      const swayTarget = LUKE_FACING_OFFSET + Math.sin(Date.now() * 0.0004) * 0.21;
-      spinY.current = THREE.MathUtils.lerp(spinY.current, swayTarget, delta * 2.5);
-    } else if (spinMult > 0) {
+    // ── Rotation / hover ─────────────────────────────────────────
+    if (config.hover) {
+      // Bus: gentle Y hover bob, no spin
+      hoverOffset.current += delta * 0.8;
+      groupRef.current.position.y = Math.sin(hoverOffset.current) * 0.35;
+      groupRef.current.rotation.y = 0;
+    } else if (config.spinMult > 0) {
       const nearTransition = [0.22, 0.47, 0.73].some(t => Math.abs(gp - t) < 0.03);
-      spinY.current += delta * SPIN_SPEED * spinMult * (nearTransition ? 2.5 : 1.0);
+      spinY.current += delta * SPIN_SPEED * config.spinMult * (nearTransition ? 2.2 : 1.0);
+      groupRef.current.rotation.y = spinY.current;
     }
-    groupRef.current.rotation.y = spinY.current;
   });
 
   return (
@@ -131,18 +140,12 @@ export default function CharacterStage() {
   return (
     <>
       {MODELS.map((m) => (
-        <CharacterModel
-          key={m.path}
-          path={m.path}
-          phaseIndex={m.phaseIndex}
-          draco={m.draco}
-          spinMult={m.spinMult}
-        />
+        <CharacterModel key={m.path} config={m} />
       ))}
     </>
   );
 }
 
+useGLTF.preload('/models/battle-bus.glb',          true);
 useGLTF.preload('/models/spider-man_symbiote.glb');
-useGLTF.preload('/models/spider-man-classic.glb', true);
-useGLTF.preload('/models/luke-skywalker.glb',     true);
+useGLTF.preload('/models/gojo.glb',                true);

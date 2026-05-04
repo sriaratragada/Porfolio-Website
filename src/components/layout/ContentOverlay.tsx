@@ -390,7 +390,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       <HeroPanel scrollEl={scrollEl} />
       <ScrollIndicator scrollEl={scrollEl} />
 
-      {/* Phase 1 — Symbiote Spider-Man: About Me */}
+      {/* Phase 1 — Battle Bus: About Me */}
       <PhasePanel
         scrollEl={scrollEl}
         phaseStart={22}
@@ -412,7 +412,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         </ul>
       </PhasePanel>
 
-      {/* Phase 2 — Classic Spider-Man: Experience */}
+      {/* Phase 2 — Symbiote Spider-Man: Experience */}
       <PhasePanel
         scrollEl={scrollEl}
         phaseStart={47}
@@ -434,7 +434,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         ))}
       </PhasePanel>
 
-      {/* Phase 3 — Luke Skywalker: Projects */}
+      {/* Phase 3 — Gojo: Projects */}
       <PhasePanel
         scrollEl={scrollEl}
         phaseStart={73}
