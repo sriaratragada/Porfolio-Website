@@ -119,6 +119,7 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
           letterSpacing: '0.2em',
           color: '#e62429',
           marginBottom: '8px',
+          opacity: 0,
         }}
       >
         {label}
@@ -133,6 +134,7 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
           color: '#f0f0f0',
           textShadow: '2px 2px 0 rgba(230,36,41,0.6)',
           letterSpacing: '0.02em',
+          opacity: 0,
         }}
       >
         {title}
@@ -140,7 +142,7 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
 
       <div
         ref={bodyRef}
-        style={{ marginTop: '20px', color: 'rgba(240,240,240,0.75)', fontSize: '14px', lineHeight: 1.6 }}
+        style={{ marginTop: '20px', color: 'rgba(240,240,240,0.75)', fontSize: '14px', lineHeight: 1.6, opacity: 0 }}
       >
         {children}
       </div>
