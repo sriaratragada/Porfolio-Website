@@ -2,12 +2,12 @@
 
 // ── Character Stage ───────────────────────────────────────────────────────────
 // Nicknames & phase order:
-//   "Bus"     = battle-bus.glb            (phase 1) — hovers, no spin
+//   "Bus"     = battle-bus.glb            (phase 1) — drop-in, hover, no spin
 //   "Symbiote"= spider-man_symbiote.glb   (phase 2) — full turntable spin
 //   "Gojo"    = gojo.glb                  (phase 3) — slow spin, faces front
 //
 // Each model auto-scales to its targetHeight and centers on its bounding box.
-// Bus gets a gentle hover bob instead of rotation.
+// Bus gets a dramatic drop-in entrance then gentle hover bob.
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useRef, useEffect } from 'react';
@@ -25,10 +25,10 @@ const MODELS = [
     path:        '/models/battle-bus.glb',
     phaseIndex:  1,
     draco:       true,
-    spinMult:    0.0,   // buses don't spin
-    hover:       true,  // gentle vertical bob
-    targetHeight: 5.5,  // bus is wide, not tall — scale to match scene
-    tint: { emissive: '#2a1a00', emissiveIntensity: 0.10 }, // warm bus-yellow tint
+    spinMult:    0.0,
+    hover:       true,
+    targetHeight: 12,   // sky sphere fills BG, bus body visible from orbit distance
+    tint: { emissive: '#2a1a00', emissiveIntensity: 0.10 },
   },
   {
     nickname:    'Symbiote',
@@ -38,7 +38,7 @@ const MODELS = [
     spinMult:    1.0,
     hover:       false,
     targetHeight: 7.5,
-    tint: { emissive: '#1a3a6e', emissiveIntensity: 0.18 }, // cold blue-white
+    tint: { emissive: '#1a3a6e', emissiveIntensity: 0.18 },
   },
   {
     nickname:    'Gojo',
@@ -48,18 +48,26 @@ const MODELS = [
     spinMult:    0.28,
     hover:       false,
     targetHeight: 7.5,
-    tint: { emissive: '#0a0a50', emissiveIntensity: 0.20 }, // deep infinity blue
+    tint: { emissive: '#0a0a50', emissiveIntensity: 0.20 },
   },
 ] as const;
 
 type ModelConfig = typeof MODELS[number];
 
+// Easing: cubic out — fast start, smooth landing
+function easeOutCubic(t: number): number {
+  return 1 - Math.pow(1 - t, 3);
+}
+
 function CharacterModel({ config }: { config: ModelConfig }) {
-  const { scene }     = useGLTF(config.path, config.draco);
-  const groupRef      = useRef<THREE.Group>(null);
-  const spinY         = useRef(0);
-  const hoverOffset   = useRef(Math.random() * Math.PI * 2); // random phase so bus doesn't snap
-  const lastOpacity   = useRef(-1);
+  const { scene }      = useGLTF(config.path, config.draco);
+  const groupRef       = useRef<THREE.Group>(null);
+  const spinY          = useRef(0);
+  const hoverOffset    = useRef(Math.random() * Math.PI * 2);
+  const lastOpacity    = useRef(-1);
+  // Drop-in state for the Bus
+  const dropTimer      = useRef(0);
+  const wasVisible     = useRef(false);
 
   useEffect(() => {
     const box    = new THREE.Box3().setFromObject(scene);
@@ -70,7 +78,7 @@ function CharacterModel({ config }: { config: ModelConfig }) {
     scene.scale.setScalar(scale);
     scene.position.set(
       -center.x * scale,
-      -box.min.y * scale, // feet / base at y=0
+      -box.min.y * scale,
       -center.z * scale,
     );
 
@@ -98,7 +106,7 @@ function CharacterModel({ config }: { config: ModelConfig }) {
     const opacity = phaseOpacity(config.phaseIndex, gp, 0.06);
     const pp      = phaseProgress(config.phaseIndex, gp);
 
-    // ── Opacity (smoothstep already applied in phaseOpacity) ─────
+    // ── Opacity ──────────────────────────────────────────────────
     if (Math.abs(opacity - lastOpacity.current) > 0.002) {
       lastOpacity.current = opacity;
       groupRef.current.visible = opacity > 0.001;
@@ -118,9 +126,28 @@ function CharacterModel({ config }: { config: ModelConfig }) {
 
     // ── Rotation / hover ─────────────────────────────────────────
     if (config.hover) {
-      // Bus: gentle Y hover bob, no spin
+      const isVisible = opacity > 0.001;
+
+      // Reset drop timer when phase becomes active again from scratch
+      if (isVisible && !wasVisible.current) {
+        dropTimer.current = 0;
+      }
+      wasVisible.current = isVisible;
+
+      if (isVisible) {
+        dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
+      }
+
+      // Drop from y=28 → 0 over 1.4 seconds, then hover bob on top
+      const DROP_HEIGHT = 28;
+      const DROP_DURATION = 1.4;
+      const dropT   = easeOutCubic(Math.min(1, dropTimer.current / DROP_DURATION));
+      const dropY   = THREE.MathUtils.lerp(DROP_HEIGHT, 0, dropT);
+
       hoverOffset.current += delta * 0.8;
-      groupRef.current.position.y = Math.sin(hoverOffset.current) * 0.35;
+      const hoverY = Math.sin(hoverOffset.current) * 0.35;
+
+      groupRef.current.position.y = dropY + hoverY;
       groupRef.current.rotation.y = 0;
     } else if (config.spinMult > 0) {
       const nearTransition = [0.22, 0.47, 0.73].some(t => Math.abs(gp - t) < 0.03);

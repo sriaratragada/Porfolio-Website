@@ -1,68 +1,100 @@
 'use client';
 
-// ── Multi-phase Camera Controller ─────────────────────────────────────────────
-// Phase 0  — Manhattan flythrough: z=17 → z=1 with ease-in-out.
-// Phase 1-3 — Each character phase: z=6.2 → z=4.2 (comfortable portrait zoom).
-//             At each transition the camera snaps back to z=6.2 — hidden by flash.
+// ── Cinematic Camera Controller ───────────────────────────────────────────────
+// Each phase has a distinct camera path so transitions feel like real cuts:
+//
+// Phase 0 — Manhattan: wide crane shot diving into the city
+// Phase 1 — Bus: cinematic ~160° orbit around the bus (right-side → front)
+// Phase 2 — Symbiote: close portrait, slow push-in
+// Phase 3 — Gojo: off-axis approach swings to center
 // ─────────────────────────────────────────────────────────────────────────────
 
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { scrollStore, PHASES, phaseProgress } from '@/lib/scrollStore';
 
-// Phase 0 — Manhattan
-const MAN_START = new THREE.Vector3(-2, 8, 17);
-const MAN_END   = new THREE.Vector3( 0, 3,  1);
+// ── Phase 0 — Manhattan crane dive ───────────────────────────────────────────
+const MAN_START = new THREE.Vector3(-2,  8, 17);
+const MAN_END   = new THREE.Vector3( 0,  3,  1);
 
-// Phase 1-3 — Character portrait
-// z=6.2 at phase start → z=4.2 at phase end
-// At z=6.2, FOV=68°: model (4.8 units tall) fills ~55% of frame height
-// At z=4.2, FOV=68°: model (4.8 * 1.15) fills ~95% → strong zoom feel
-const CHAR_Z_FAR  = 6.2;
-const CHAR_Z_NEAR = 4.2;
-const CHAR_Y      = 1.8;  // camera height — just below model center for heroic angle
-const CHAR_LOOK   = new THREE.Vector3(0, 2.8, 0); // aim at chest/face
+// ── Phase 1 — Bus: orbital sweep from right flank to front ───────────────────
+// Camera arcs ~160° around Y axis. Radius 8 keeps sky sphere filling the BG.
+const BUS_ORBIT_RADIUS = 8;
+const BUS_ORBIT_Y      = 4.5;
+const BUS_LOOK_Y       = 6.5;
+const BUS_ANGLE_START  =  Math.PI * 0.82;  // behind-right
+const BUS_ANGLE_END    = -Math.PI * 0.10;  // slightly left of front
 
-const _target = new THREE.Vector3();
+// ── Phase 2 — Symbiote: clean portrait push-in ───────────────────────────────
+const SYM_POS_START = new THREE.Vector3(0, 2.2, 8.5);
+const SYM_POS_END   = new THREE.Vector3(0, 2.8, 6.0);
+const SYM_LOOK      = new THREE.Vector3(0, 3.8, 0);
+
+// ── Phase 3 — Gojo: off-axis swings to center — cinematic arc ────────────────
+const GOJ_POS_START = new THREE.Vector3(-3.0, 3.2, 8.0);
+const GOJ_POS_END   = new THREE.Vector3( 0.5, 2.8, 5.5);
+const GOJ_LOOK      = new THREE.Vector3( 0,   4.0, 0);
+
+const _pos  = new THREE.Vector3();
 
 export default function CameraController() {
   const { camera, scene } = useThree();
 
   useFrame((_, delta) => {
-    const gp = scrollStore.globalProgress;
-    const p0 = PHASES[0];
+    const gp  = scrollStore.globalProgress;
+    const fog = scene.fog as THREE.FogExp2 | undefined;
 
-    if (gp <= p0.end + 0.01) {
-      // ── Phase 0: fly into Manhattan ────────────────────────────────
-      const t = phaseProgress(0, gp);
+    // ── Phase 0: Manhattan dive ───────────────────────────────────────────────
+    if (gp <= PHASES[0].end + 0.01) {
+      const t     = phaseProgress(0, gp);
       const eased = t < 0.5 ? 2 * t * t : 1 - Math.pow(-2 * t + 2, 2) / 2;
 
-      _target.lerpVectors(MAN_START, MAN_END, eased);
-      camera.position.lerp(_target, 9 * delta);
+      _pos.lerpVectors(MAN_START, MAN_END, eased);
+      camera.position.lerp(_pos, 9 * delta);
       camera.lookAt(-2, 4, 0);
+      if (fog) fog.density = THREE.MathUtils.lerp(fog.density, 0.018, 8 * delta);
+      return;
+    }
 
-      if (scene.fog) (scene.fog as THREE.FogExp2).density = 0.018;
+    // ── Phase 1: Bus — orbital sweep around the bus ───────────────────────────
+    if (gp < PHASES[2].start) {
+      const pp    = phaseProgress(1, gp);
+      // Smooth ease-out so the arc decelerates as it reaches the front
+      const eased = 1 - Math.pow(1 - pp, 2.5);
 
-    } else {
-      // ── Phase 1-3: per-phase push-in ───────────────────────────────
-      let currentPhaseIdx = 1;
-      if      (gp >= PHASES[3].start) currentPhaseIdx = 3;
-      else if (gp >= PHASES[2].start) currentPhaseIdx = 2;
+      const angle = THREE.MathUtils.lerp(BUS_ANGLE_START, BUS_ANGLE_END, eased);
+      _pos.set(
+        Math.sin(angle) * BUS_ORBIT_RADIUS,
+        BUS_ORBIT_Y,
+        Math.cos(angle) * BUS_ORBIT_RADIUS,
+      );
+      camera.position.lerp(_pos, 3.5 * delta);
+      camera.lookAt(0, BUS_LOOK_Y, 0);
+      if (fog) fog.density = THREE.MathUtils.lerp(fog.density, 0.002, 6 * delta);
+      return;
+    }
 
-      const pp = phaseProgress(currentPhaseIdx, gp); // 0→1 within current phase
-      // Ease-in: zoom accelerates in the second half
-      const easedPP = pp * pp;
-      const targetZ = THREE.MathUtils.lerp(CHAR_Z_FAR, CHAR_Z_NEAR, easedPP);
+    // ── Phase 2: Symbiote — sharp portrait ────────────────────────────────────
+    if (gp < PHASES[3].start) {
+      const pp    = phaseProgress(2, gp);
+      const eased = pp * pp;
 
-      _target.set(0, CHAR_Y, targetZ);
-      camera.position.lerp(_target, 5 * delta);
-      camera.lookAt(CHAR_LOOK);
+      _pos.lerpVectors(SYM_POS_START, SYM_POS_END, eased);
+      camera.position.lerp(_pos, 4 * delta);
+      camera.lookAt(SYM_LOOK);
+      if (fog) fog.density = THREE.MathUtils.lerp(fog.density, 0.0005, 10 * delta);
+      return;
+    }
 
-      // Clear fog so characters render crisp
-      if (scene.fog) {
-        const fog = scene.fog as THREE.FogExp2;
-        fog.density = THREE.MathUtils.lerp(fog.density, 0.0005, 10 * delta);
-      }
+    // ── Phase 3: Gojo — off-axis arc swings to center ─────────────────────────
+    {
+      const pp    = phaseProgress(3, gp);
+      const eased = pp < 0.5 ? 2 * pp * pp : 1 - Math.pow(-2 * pp + 2, 2) / 2;
+
+      _pos.lerpVectors(GOJ_POS_START, GOJ_POS_END, eased);
+      camera.position.lerp(_pos, 3.5 * delta);
+      camera.lookAt(GOJ_LOOK);
+      if (fog) fog.density = THREE.MathUtils.lerp(fog.density, 0.0005, 10 * delta);
     }
   });
 

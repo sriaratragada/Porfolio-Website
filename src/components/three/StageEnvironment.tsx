@@ -150,13 +150,15 @@ function PhaseLights() {
 }
 
 // ── Stage visibility wrapper ──────────────────────────────────────────────────
+// Only active in phases 2 (Symbiote) and 3 (Gojo).
+// Bus phase has its own built-in sky sphere — floor disc would fight with it.
 export default function StageEnvironment() {
   const groupRef = useRef<THREE.Group>(null);
 
   useFrame(() => {
     if (!groupRef.current) return;
     const gp = scrollStore.globalProgress;
-    groupRef.current.visible = gp > PHASES[1].start - 0.02;
+    groupRef.current.visible = gp >= PHASES[2].start - 0.04;
   });
 
   return (
