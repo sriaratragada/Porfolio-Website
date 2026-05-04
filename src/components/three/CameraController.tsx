@@ -17,13 +17,14 @@ import { scrollStore, PHASES, phaseProgress } from '@/lib/scrollStore';
 const MAN_START = new THREE.Vector3(-2,  8, 17);
 const MAN_END   = new THREE.Vector3( 0,  3,  1);
 
-// ── Phase 1 — Bus: orbital sweep from right flank to front ───────────────────
-// Camera arcs ~160° around Y axis. Radius 8 keeps sky sphere filling the BG.
-const BUS_ORBIT_RADIUS = 8;
-const BUS_ORBIT_Y      = 4.5;
-const BUS_LOOK_Y       = 6.5;
-const BUS_ANGLE_START  =  Math.PI * 0.82;  // behind-right
-const BUS_ANGLE_END    = -Math.PI * 0.10;  // slightly left of front
+// ── Phase 1 — Bus: 180° orbit with bus centred, sky sphere as backdrop ────────
+// Radius 16 keeps camera well outside the bus mesh. The GLB sky sphere extends
+// far beyond the orbit so it fills the entire background.
+const BUS_ORBIT_RADIUS = 16;
+const BUS_ORBIT_Y      = 3.0;   // mid-height of a 6-unit tall bus
+const BUS_LOOK_Y       = 3.0;
+const BUS_ANGLE_START  =  Math.PI * 0.65;  // right-back flank
+const BUS_ANGLE_END    = -Math.PI * 0.35;  // left-back flank (180° arc through front)
 
 // ── Phase 2 — Symbiote: clean portrait push-in ───────────────────────────────
 const SYM_POS_START = new THREE.Vector3(0, 2.2, 8.5);

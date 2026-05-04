@@ -27,7 +27,7 @@ const MODELS = [
     draco:       true,
     spinMult:    0.0,
     hover:       true,
-    targetHeight: 12,   // sky sphere fills BG, bus body visible from orbit distance
+    targetHeight: 6,    // bus body as focal point; sky sphere extends well beyond orbit
     tint: { emissive: '#2a1a00', emissiveIntensity: 0.10 },
   },
   {
@@ -139,7 +139,7 @@ function CharacterModel({ config }: { config: ModelConfig }) {
       }
 
       // Drop from y=28 → 0 over 1.4 seconds, then hover bob on top
-      const DROP_HEIGHT = 28;
+      const DROP_HEIGHT = 20;
       const DROP_DURATION = 1.4;
       const dropT   = easeOutCubic(Math.min(1, dropTimer.current / DROP_DURATION));
       const dropY   = THREE.MathUtils.lerp(DROP_HEIGHT, 0, dropT);
