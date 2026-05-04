@@ -1,26 +1,133 @@
 @import "tailwindcss";
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  --spider-red: #e62429;
+  --spider-blue: #2196F3;
+  --spider-dark: #0a0a0f;
+  --spider-white: #f0f0f0;
+  --panel-border: #1a1a1a;
+  --panel-bg: rgba(10, 10, 15, 0.85);
 }
 
 @theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --color-spider-red: var(--spider-red);
+  --color-spider-blue: var(--spider-blue);
+  --color-spider-dark: var(--spider-dark);
+  --color-spider-white: var(--spider-white);
+  --color-panel-border: var(--panel-border);
+  --font-bebas: var(--font-bebas);
+  --font-bangers: var(--font-bebas); /* alias for components that use --font-bangers */
+  --font-comic: var(--font-comic-neue);
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html {
+  scroll-behavior: auto;
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: radial-gradient(ellipse at 50% 30%, #0d1235 0%, #060610 60%, #000 100%);
+  color: var(--spider-white);
+  font-family: var(--font-comic-neue), 'Comic Neue', cursive;
+  overflow-x: hidden;
+}
+
+::-webkit-scrollbar {
+  width: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--spider-dark);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--spider-red);
+  border-radius: 3px;
+}
+
+/* Comic panel base */
+.comic-panel {
+  border: 3px solid var(--panel-border);
+  box-shadow: 4px 4px 0 #000;
+  background: var(--panel-bg);
+  backdrop-filter: blur(4px);
+  position: relative;
+  overflow: hidden;
+}
+
+.comic-panel::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.07) 1px, transparent 1px);
+  background-size: 4px 4px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Paper grain overlay */
+.paper-grain {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  pointer-events: none;
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  background-size: 256px 256px;
+}
+
+/* Halftone overlay */
+.halftone-overlay::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: radial-gradient(circle, rgba(255,255,255,0.05) 1px, transparent 1px);
+  background-size: 6px 6px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Sound effect burst animation */
+@keyframes sound-burst {
+  0% { transform: scale(0) rotate(-12deg); opacity: 0; }
+  60% { transform: scale(1.15) rotate(-12deg); opacity: 1; }
+  100% { transform: scale(1) rotate(-12deg); opacity: 1; }
+}
+
+.sound-effect-enter {
+  animation: sound-burst 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+/* Cinematic letterbox bars */
+.letterbox-bar {
+  position: fixed;
+  left: 0;
+  right: 0;
+  height: 56px;
+  background: #000;
+  z-index: 30;
+  pointer-events: none;
+}
+.letterbox-top    { top: 0; }
+.letterbox-bottom { bottom: 0; }
+
+/* Section spacing */
+.section-container {
+  position: relative;
+  z-index: 10;
+  padding: 6rem 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (max-width: 768px) {
+  .section-container {
+    padding: 3rem 1rem;
+  }
 }
