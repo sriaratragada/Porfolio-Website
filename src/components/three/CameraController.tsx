@@ -27,9 +27,9 @@ const BUS_FOV          = 62;  // Lower = telephoto/zoomed-in, higher = wide-angl
 
 // ── Phase 2 — Race Track: 120° sweeping orbit, closer + more elevated ─────────────
 const DRG_ORBIT_RADIUS = 20;    // Lower = closer zoom, higher = wider view
-const DRG_ORBIT_Y_START = 6.0;   // starts high, swoops down
+const DRG_ORBIT_Y_START = 10.0;   // starts high, swoops down
 const DRG_ORBIT_Y_END   = 3.5;
-const DRG_LOOK_Y        = 10.0;
+const DRG_LOOK_Y        = 6.0;
 const DRG_ANGLE_START   =  Math.PI * 0.55;  // right side
 const DRG_ANGLE_END     = -Math.PI * 0.10;  // slight left of front
 const DRG_FOV           = 58;
