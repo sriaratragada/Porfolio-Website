@@ -18,69 +18,75 @@ import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
 const MODELS = [
   {
-    nickname:     'Bus',
-    path:         '/models/battle-bus.glb',
-    phaseIndex:   1,
-    draco:        true,
-    isEnv:        true,
-    spinMult:     0,
-    hover:        true,
-    targetHeight: 6,
+    nickname:       'Bus',
+    path:           '/models/battle-bus.glb',
+    phaseIndex:     1,
+    draco:          true,
+    isEnv:          true,
+    centerAtOrigin: false,
+    spinMult:       0,
+    hover:          true,
+    targetHeight:   6,
     tint: { emissive: '#1a1000', emissiveIntensity: 0.08 },
   },
   {
-    nickname:     'Dragon',
-    path:         '/models/wrath_of_the_dragon.glb',
-    phaseIndex:   2,
-    draco:        true,
-    isEnv:        true,
-    spinMult:     0.04,  // very slow environment rotation
-    hover:        false,
-    targetHeight: 10,
+    nickname:       'Dragon',
+    path:           '/models/wrath_of_the_dragon.glb',
+    phaseIndex:     2,
+    draco:          true,
+    isEnv:          true,
+    centerAtOrigin: false,
+    spinMult:       0.04,
+    hover:          false,
+    targetHeight:   10,
     tint: { emissive: '#2a0500', emissiveIntensity: 0.10 },
   },
   {
-    nickname:     'Sky',
-    path:         '/models/anime_sky.glb',
-    phaseIndex:   3,
-    draco:        true,
-    isEnv:        true,
-    spinMult:     0,
-    hover:        false,
-    targetHeight: 60,   // camera lives inside this skybox
+    nickname:       'Sky',
+    path:           '/models/anime_sky.glb',
+    phaseIndex:     3,
+    draco:          true,
+    isEnv:          true,
+    centerAtOrigin: true,   // sphere skybox — camera lives inside
+    spinMult:       0,
+    hover:          false,
+    targetHeight:   60,
     tint: { emissive: '#050d1a', emissiveIntensity: 0.04 },
   },
   {
-    nickname:     'Clouds',
-    path:         '/models/skybox-above-clouds.glb',
-    phaseIndex:   4,
-    draco:        true,
-    isEnv:        true,
-    spinMult:     0,
-    hover:        false,
-    targetHeight: 70,
+    nickname:       'Clouds',
+    path:           '/models/skybox-above-clouds.glb',
+    phaseIndex:     4,
+    draco:          true,
+    isEnv:          true,
+    centerAtOrigin: true,   // sphere skybox
+    spinMult:       0,
+    hover:          false,
+    targetHeight:   70,
     tint: { emissive: '#101822', emissiveIntensity: 0.05 },
   },
   {
-    nickname:     'Forest',
-    path:         '/models/skybox-enchanted-forest.glb',
-    phaseIndex:   5,
-    draco:        true,
-    isEnv:        true,
-    spinMult:     0,
-    hover:        false,
-    targetHeight: 64,
+    nickname:       'Forest',
+    path:           '/models/skybox-enchanted-forest.glb',
+    phaseIndex:     5,
+    draco:          true,
+    isEnv:          true,
+    centerAtOrigin: true,   // sphere skybox
+    spinMult:       0,
+    hover:          false,
+    targetHeight:   64,
     tint: { emissive: '#06170c', emissiveIntensity: 0.07 },
   },
   {
-    nickname:     'Hangar',
-    path:         '/models/star-destroyer-hangar.glb',
-    phaseIndex:   6,
-    draco:        true,
-    isEnv:        true,
-    spinMult:     0.015,
-    hover:        false,
-    targetHeight: 22,
+    nickname:       'Hangar',
+    path:           '/models/star-destroyer-hangar.glb',
+    phaseIndex:     6,
+    draco:          true,
+    isEnv:          true,
+    centerAtOrigin: true,   // cube env — camera at geometric center avoids corner warp
+    spinMult:       0,
+    hover:          false,
+    targetHeight:   22,
     tint: { emissive: '#080d14', emissiveIntensity: 0.08 },
   },
 ] as const;
@@ -107,11 +113,10 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
     const scale  = config.targetHeight / size.y;
 
     scene.scale.setScalar(scale);
-    scene.position.set(
-      -center.x * scale,
-      -box.min.y * scale,
-      -center.z * scale,
-    );
+    // Skyboxes: center the sphere/cube at world origin so camera inside sits at (0,0,0).
+    // Other models: base sits at y=0 so characters stand on the floor.
+    const originY = config.centerAtOrigin ? -center.y * scale : -box.min.y * scale;
+    scene.position.set(-center.x * scale, originY, -center.z * scale);
 
     const emissiveColor = new THREE.Color(config.tint.emissive);
     scene.traverse((child) => {

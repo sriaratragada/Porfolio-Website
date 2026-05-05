@@ -43,10 +43,10 @@ export default function ManhattanBackground() {
     const gp = scrollStore.globalProgress;
     const p0 = PHASES[0];
 
-    // Phase 0 only. Fades to 0 completely — Manhattan must not bleed into character phases.
+    // Phase 0 only. Must be fully gone by PHASES[1].start (0.14) when Bus appears.
     let opacity: number;
-    if (gp <= 0.18)       opacity = 1.0;
-    else if (gp <= 0.26)  opacity = THREE.MathUtils.lerp(1.0, 0.0, (gp - 0.18) / 0.08);
+    if (gp <= 0.08)       opacity = 1.0;
+    else if (gp <= 0.14)  opacity = THREE.MathUtils.lerp(1.0, 0.0, (gp - 0.08) / 0.06);
     else                  opacity = 0.0;
 
     groupRef.current.visible = opacity > 0.01;
