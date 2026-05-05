@@ -11,6 +11,7 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import PhotoSphereControls from '@/components/three/PhotoSphereControls';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -510,6 +511,9 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
 
       {/* Phase progress dots */}
       <PhaseDots scrollEl={scrollEl} />
+
+      {/* Photo-sphere drag controls (phases 4 & 5) */}
+      <PhotoSphereControls />
 
       {/* Black flash at every phase transition */}
       <TransitionFlash scrollEl={scrollEl} />
