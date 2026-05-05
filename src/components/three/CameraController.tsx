@@ -1,4 +1,5 @@
 'use client';
+'use no memo';
 
 // ── Cinematic Camera Controller ───────────────────────────────────────────────
 // Phase 0 — Manhattan: wide crane shot diving into the city
@@ -12,6 +13,7 @@ import { useFrame, useThree } from '@react-three/fiber';
 import { useEffect, useRef } from 'react';
 import * as THREE from 'three';
 import { scrollStore, PHASES, phaseProgress } from '@/lib/scrollStore';
+import { photoSphereStore } from '@/lib/photoSphereStore';
 
 // ── Phase 0 — Manhattan crane dive ───────────────────────────────────────────
 const MAN_START = new THREE.Vector3(-2,  8, 17);
@@ -27,9 +29,9 @@ const BUS_FOV          = 62;  // Lower = telephoto/zoomed-in, higher = wide-angl
 
 // ── Phase 2 — Race Track: 120° sweeping orbit, closer + more elevated ─────────────
 const DRG_ORBIT_RADIUS = 20;    // Lower = closer zoom, higher = wider view
-const DRG_ORBIT_Y_START = 6.0;   // starts high, swoops down
+const DRG_ORBIT_Y_START = 10.0;   // starts high, swoops down
 const DRG_ORBIT_Y_END   = 3.5;
-const DRG_LOOK_Y        = 10.0;
+const DRG_LOOK_Y        = 2.0;
 const DRG_ANGLE_START   =  Math.PI * 0.55;  // right side
 const DRG_ANGLE_END     = -Math.PI * 0.10;  // slight left of front
 const DRG_FOV           = 58;
@@ -67,7 +69,9 @@ const HANGAR_ANGLE_START  = Math.PI * 0.85;
 const HANGAR_ANGLE_END    = HANGAR_ANGLE_START - Math.PI * 1.05;
 const HANGAR_FOV          = 64;
 
-const _pos = new THREE.Vector3();
+const _pos       = new THREE.Vector3();
+const _look      = new THREE.Vector3();
+const _SPHERE_POS = new THREE.Vector3(0, 0.5, 0); // inside hollow sphere, slight eye-height offset
 
 function setFov(camera: THREE.Camera, fov: number, delta: number) {
   if (!(camera instanceof THREE.PerspectiveCamera)) return;
@@ -167,18 +171,34 @@ export default function CameraController() {
       return;
     }
 
-    // ── Phase 4: Above Clouds — orbit inside sphere ───────────────────────────
+    // ── Phase 4: Above Clouds — photo sphere, mouse-look ────────────────────
     if (gp < PHASES[5].start) {
-      const pp = phaseProgress(4, gp);
-      setOrbitCamera(camera, pp, CLOUD_ORBIT_RADIUS, CLOUD_ORBIT_Y, CLOUD_LOOK_Y, CLOUD_ANGLE_START, CLOUD_ANGLE_END, CLOUD_FOV, delta, 2.0);
+      camera.position.lerp(_SPHERE_POS, 8 * delta);
+      const az4 = photoSphereStore.azimuth;
+      const el4 = photoSphereStore.elevation;
+      _look.set(
+        Math.sin(az4) * Math.cos(el4),
+        Math.sin(el4),
+        Math.cos(az4) * Math.cos(el4),
+      ).multiplyScalar(10).add(_SPHERE_POS);
+      camera.lookAt(_look);
+      setFov(camera, CLOUD_FOV, delta);
       setFogDensity(fog, 0.00015, 10 * delta);
       return;
     }
 
-    // ── Phase 5: Enchanted Forest — orbit inside sphere ──────────────────────
+    // ── Phase 5: Enchanted Forest — photo sphere, mouse-look ─────────────────
     if (gp < PHASES[6].start) {
-      const pp = phaseProgress(5, gp);
-      setOrbitCamera(camera, pp, FOREST_ORBIT_RADIUS, FOREST_ORBIT_Y, FOREST_LOOK_Y, FOREST_ANGLE_START, FOREST_ANGLE_END, FOREST_FOV, delta, 2.0);
+      camera.position.lerp(_SPHERE_POS, 8 * delta);
+      const az5 = photoSphereStore.azimuth;
+      const el5 = photoSphereStore.elevation;
+      _look.set(
+        Math.sin(az5) * Math.cos(el5),
+        Math.sin(el5),
+        Math.cos(az5) * Math.cos(el5),
+      ).multiplyScalar(10).add(_SPHERE_POS);
+      camera.lookAt(_look);
+      setFov(camera, FOREST_FOV, delta);
       setFogDensity(fog, 0.00035, 10 * delta);
       return;
     }

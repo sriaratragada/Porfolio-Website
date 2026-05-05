@@ -8,6 +8,7 @@ import ManhattanBackground   from './ManhattanBackground';
 import CharacterStage        from './CharacterStage';
 import SceneLighting         from './SceneLighting';
 import CameraController      from './CameraController';
+import PhotoSphereControls   from './PhotoSphereControls';
 import PostProcessingEffects from './PostProcessing';
 
 export default function SceneCanvas() {
@@ -47,6 +48,9 @@ export default function SceneCanvas() {
 
         {/* Camera animates across all phases */}
         <CameraController />
+
+        {/* Photo sphere drag controls — active in phases 4 and 5 */}
+        <PhotoSphereControls />
 
         <AdaptiveDpr pixelated />
         <AdaptiveEvents />

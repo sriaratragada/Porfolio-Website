@@ -63,7 +63,7 @@ const MODELS = [
     draco:          true,
     isEnv:          true,
     centerAtOrigin: true,
-    backSide:       false,
+    backSide:       true,
     spinMult:       0,
     hover:          false,
     targetHeight:   70,
@@ -76,7 +76,7 @@ const MODELS = [
     draco:          true,
     isEnv:          true,
     centerAtOrigin: true,
-    backSide:       false,
+    backSide:       true,
     spinMult:       0,
     hover:          false,
     targetHeight:   64,
@@ -128,21 +128,31 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
     scene.traverse((child) => {
       if (!(child as THREE.Mesh).isMesh) return;
       const mesh = child as THREE.Mesh;
+
+      if (config.backSide) {
+        // Photo sphere skyboxes: replace material with MeshBasicMaterial so the
+        // panoramic texture is self-illuminated regardless of scene lighting.
+        const oldMats = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.Material[];
+        const newMats = oldMats.map(m => {
+          const src = m as THREE.MeshStandardMaterial;
+          const tex = src.map ?? src.emissiveMap ?? undefined;
+          return new THREE.MeshBasicMaterial({
+            map:         tex,
+            side:        THREE.BackSide,
+            transparent: true,
+            depthWrite:  false,
+            opacity:     0,
+          });
+        });
+        mesh.material = newMats.length === 1 ? newMats[0] : newMats;
+        return;
+      }
+
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of mats as THREE.MeshStandardMaterial[]) {
         m.transparent = true;
         m.depthWrite  = false;
-        if (config.backSide) {
-          // Sphere skyboxes: camera inside, textures face outward.
-          // BackSide makes geometry visible. Use texture as emissive so
-          // lighting direction doesn't matter — camera sees full detail.
-          m.side = THREE.BackSide;
-          if (m.map) {
-            m.emissiveMap       = m.map;
-            m.emissive.setRGB(1, 1, 1);
-            m.emissiveIntensity = 1.0;
-          }
-        } else if (m.emissive !== undefined) {
+        if (m.emissive !== undefined) {
           m.emissive.copy(emissiveColor);
           m.emissiveIntensity = config.tint.emissiveIntensity;
         }
