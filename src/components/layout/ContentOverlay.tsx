@@ -389,7 +389,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       <HeroPanel scrollEl={scrollEl} />
       <ScrollIndicator scrollEl={scrollEl} />
 
-      {/* Phase 1 — Battle Bus: About Me */}
+      {/* Phase 1 — Battle Bus */}
       <PhasePanel
         scrollEl={scrollEl}
         phaseStart={14}
@@ -399,7 +399,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         align="left"
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
-          Full stack developer with a passion for crafting immersive digital experiences. I bridge the gap between technical engineering and creative design.
+          The camera circles the iconic Fortnite Battle Bus drifting high above the clouds — a golden vehicle carrying you into the unknown. Just like dropping from the bus, every project starts with a leap.
         </p>
         <ul style={{ marginTop: '14px', paddingLeft: '0', listStyle: 'none', display: 'flex', flexDirection: 'column', gap: '8px' }}>
           {['React / Next.js', 'Three.js / WebGL', 'TypeScript', 'Node.js / PostgreSQL'].map((skill) => (
@@ -411,7 +411,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         </ul>
       </PhasePanel>
 
-      {/* Phase 2 — Symbiote Spider-Man: Experience */}
+      {/* Phase 2 — Dragon */}
       <PhasePanel
         scrollEl={scrollEl}
         phaseStart={28}
@@ -420,6 +420,9 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         title={"THE\nJOURNEY"}
         align="left"
       >
+        <p style={{ fontFamily: 'var(--font-comic)' }}>
+          A dragon's domain — ancient, vast, and commanding. The camera sweeps around a towering mythical landscape as the environment slowly rotates. Each role I've held shaped the scale of what I can build.
+        </p>
         {[
           { company: 'Company Name', role: 'Senior Developer', period: '2023 – Present' },
           { company: 'Previous Co', role: 'Full Stack Dev',    period: '2021 – 2023'    },
@@ -433,7 +436,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         ))}
       </PhasePanel>
 
-      {/* Phase 3 — Gojo: Projects */}
+      {/* Phase 3 — Anime Sky */}
       <PhasePanel
         scrollEl={scrollEl}
         phaseStart={42}
@@ -442,6 +445,9 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         title={"WHAT\nI BUILT"}
         align="left"
       >
+        <p style={{ fontFamily: 'var(--font-comic)' }}>
+          You are now inside an anime sky panorama — a hand-painted world of drifting clouds, warm light, and endless horizon. The camera orbits gently through this living painting, just as these projects came to life through craft and iteration.
+        </p>
         {[
           { title: 'Project Alpha', tags: ['React', 'Three.js', 'WebGL'] },
           { title: 'Project Beta',  tags: ['Next.js', 'Socket.io', 'PostgreSQL'] },
@@ -465,12 +471,12 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={56}
         phaseEnd={70}
-        label="SKYBOX — PHASE 04"
-        title={"ABOVE\nCLOUDS"}
+        label="SKILLS — PHASE 04"
+        title={"ABOVE\nTHE CLOUDS"}
         align="right"
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
-          A 360-degree cloud scene using the same orbital camera language as the Battle Bus section.
+          Breaking through the cloud line, snowy peaks stretch to the horizon in every direction. You are orbiting inside a 360° mountain skybox — a reminder that the view from the top is earned, not given.
         </p>
       </PhasePanel>
 
@@ -479,12 +485,12 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={70}
         phaseEnd={84}
-        label="SKYBOX — PHASE 05"
+        label="CONTACT — PHASE 05"
         title={"ENCHANTED\nFOREST"}
         align="left"
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
-          The camera keeps circling while the environment fades in, scales subtly, and fills the viewport.
+          Ancient trees tower overhead as the camera drifts through a glowing enchanted forest. Light filters through every branch — a world that rewards those who look closely. Let's build something worth exploring.
         </p>
       </PhasePanel>
 
@@ -493,12 +499,12 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={84}
         phaseEnd={100}
-        label="HANGAR — PHASE 06"
+        label="FINAL — PHASE 06"
         title={"STAR\nDESTROYER"}
         align="right"
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
-          A wider orbit gives the hangar more room, so lowering the phase radius will push the camera closer.
+          Inside a Star Destroyer hangar — cold steel, towering scale, and the hum of something immense. The camera orbits the interior of an Imperial warship. This is where the journey ends… and the next one begins.
         </p>
       </PhasePanel>
 

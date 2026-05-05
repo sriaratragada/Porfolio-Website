@@ -24,33 +24,36 @@ const MODELS = [
     draco:          true,
     isEnv:          true,
     centerAtOrigin: false,
+    backSide:       false,
     spinMult:       0,
     hover:          true,
     targetHeight:   6,
     tint: { emissive: '#1a1000', emissiveIntensity: 0.08 },
   },
   {
-    nickname:       'Dragon',
-    path:           '/models/wrath_of_the_dragon.glb',
+    nickname:       'Track',
+    path:           '/models/drift_race_track_free.glb',
     phaseIndex:     2,
-    draco:          true,
+    draco:          false,  // not Draco-compressed
     isEnv:          true,
     centerAtOrigin: false,
-    spinMult:       0.04,
-    hover:          false,
-    targetHeight:   10,
-    tint: { emissive: '#2a0500', emissiveIntensity: 0.10 },
-  },
-  {
-    nickname:       'Sky',
-    path:           '/models/anime_sky.glb',
-    phaseIndex:     3,
-    draco:          true,
-    isEnv:          true,
-    centerAtOrigin: true,   // sphere skybox — camera lives inside
+    backSide:       false,
     spinMult:       0,
     hover:          false,
-    targetHeight:   60,
+    targetHeight:   12,
+    tint: { emissive: '#0a0500', emissiveIntensity: 0.06 },
+  },
+  {
+    nickname:       'Bedroom',
+    path:           '/models/modern_bedroom.glb',
+    phaseIndex:     3,
+    draco:          false,  // not Draco-compressed — decoder was corrupting geometry
+    isEnv:          true,
+    centerAtOrigin: false,  // floor at y=0, camera orbits inside at eye height
+    backSide:       false,
+    spinMult:       0,
+    hover:          false,
+    targetHeight:   7,      // scale so depth (~77 units) contains orbit radius 35
     tint: { emissive: '#050d1a', emissiveIntensity: 0.04 },
   },
   {
@@ -59,7 +62,8 @@ const MODELS = [
     phaseIndex:     4,
     draco:          true,
     isEnv:          true,
-    centerAtOrigin: true,   // sphere skybox
+    centerAtOrigin: true,
+    backSide:       false,
     spinMult:       0,
     hover:          false,
     targetHeight:   70,
@@ -71,7 +75,8 @@ const MODELS = [
     phaseIndex:     5,
     draco:          true,
     isEnv:          true,
-    centerAtOrigin: true,   // sphere skybox
+    centerAtOrigin: true,
+    backSide:       false,
     spinMult:       0,
     hover:          false,
     targetHeight:   64,
@@ -84,6 +89,7 @@ const MODELS = [
     draco:          true,
     isEnv:          true,
     centerAtOrigin: true,   // cube env — camera at geometric center avoids corner warp
+    backSide:       false,  // hangar normals already face inward — no flip needed
     spinMult:       0,
     hover:          false,
     targetHeight:   22,
@@ -126,10 +132,21 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
       for (const m of mats as THREE.MeshStandardMaterial[]) {
         m.transparent = true;
         m.depthWrite  = false;
-        if (m.emissive !== undefined) {
+        if (config.backSide) {
+          // Sphere skyboxes: camera inside, textures face outward.
+          // BackSide makes geometry visible. Use texture as emissive so
+          // lighting direction doesn't matter — camera sees full detail.
+          m.side = THREE.BackSide;
+          if (m.map) {
+            m.emissiveMap       = m.map;
+            m.emissive.setRGB(1, 1, 1);
+            m.emissiveIntensity = 1.0;
+          }
+        } else if (m.emissive !== undefined) {
           m.emissive.copy(emissiveColor);
           m.emissiveIntensity = config.tint.emissiveIntensity;
         }
+        m.needsUpdate = true;
       }
     });
   }, [scene, config]);
@@ -199,8 +216,8 @@ export default function CharacterStage() {
 }
 
 useGLTF.preload('/models/battle-bus.glb',              true);
-useGLTF.preload('/models/wrath_of_the_dragon.glb',     true);
-useGLTF.preload('/models/anime_sky.glb',               true);
+useGLTF.preload('/models/drift_race_track_free.glb',   false);
+useGLTF.preload('/models/modern_bedroom.glb',          false);
 useGLTF.preload('/models/skybox-above-clouds.glb',     true);
 useGLTF.preload('/models/skybox-enchanted-forest.glb', true);
 useGLTF.preload('/models/star-destroyer-hangar.glb',   true);

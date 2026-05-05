@@ -33,25 +33,30 @@ export default function SceneLighting() {
       blueLightRef.current.intensity = (18 + Math.sin(t * 0.6) * 6) * (1 - charBlend);
     }
 
-    // ── Character studio lights (fade in as characters appear) ────
+    // Fade studio lights out during Forest phase (skybox self-illuminates)
+    const p5 = PHASES[5];
+    const forestBlend = Math.max(0, Math.min(1, (gp - p5.start) / (p5.end - p5.start)));
+    const studioScale = charBlend * (1 - forestBlend);
+
+    // ── Character studio lights (fade in as characters appear, out for Forest) ─
     if (keyLightRef.current) {
       keyLightRef.current.intensity = THREE.MathUtils.damp(
         keyLightRef.current.intensity,
-        6.5 * charBlend,   // brighter key
+        6.5 * studioScale,
         5, delta
       );
     }
     if (fillLightRef.current) {
       fillLightRef.current.intensity = THREE.MathUtils.damp(
         fillLightRef.current.intensity,
-        3.2 * charBlend,   // generous fill — lifts shadow side
+        3.2 * studioScale,
         5, delta
       );
     }
     if (rimLightRef.current) {
       rimLightRef.current.intensity = THREE.MathUtils.damp(
         rimLightRef.current.intensity,
-        5.0 * charBlend,   // strong rim for separation from background
+        5.0 * studioScale,
         5, delta
       );
     }

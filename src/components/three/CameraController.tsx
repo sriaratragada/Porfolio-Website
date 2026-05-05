@@ -18,44 +18,46 @@ const MAN_START = new THREE.Vector3(-2,  8, 17);
 const MAN_END   = new THREE.Vector3( 0,  3,  1);
 
 // ── Phase 1 — Bus: 180° orbit, bus centred, sky sphere as full backdrop ───────
-const BUS_ORBIT_RADIUS = 5; // Lower = closer zoom, higher = wider view
+const BUS_ORBIT_RADIUS = 2.75; // Lower = closer zoom, higher = wider view
 const BUS_ORBIT_Y      = 3.0; // Camera height
 const BUS_LOOK_Y       = 2.5; // What vertical point the camera stares at
 const BUS_ANGLE_START  =  Math.PI * 0.65;
 const BUS_ANGLE_END    = -Math.PI * 0.35;
 const BUS_FOV          = 62;  // Lower = telephoto/zoomed-in, higher = wide-angle
 
-// ── Phase 2 — Dragon: 120° sweeping orbit, closer + more elevated ─────────────
-const DRG_ORBIT_RADIUS = 14;    // Lower = closer zoom, higher = wider view
+// ── Phase 2 — Race Track: 120° sweeping orbit, closer + more elevated ─────────────
+const DRG_ORBIT_RADIUS = 20;    // Lower = closer zoom, higher = wider view
 const DRG_ORBIT_Y_START = 6.0;   // starts high, swoops down
 const DRG_ORBIT_Y_END   = 3.5;
-const DRG_LOOK_Y        = 4.0;
+const DRG_LOOK_Y        = 10.0;
 const DRG_ANGLE_START   =  Math.PI * 0.55;  // right side
 const DRG_ANGLE_END     = -Math.PI * 0.10;  // slight left of front
 const DRG_FOV           = 58;
 
-// ── Phase 3 — Anime Sky: camera near origin, look pans landscape → sky ────────
-// Camera stays inside the sphere — only the look direction sweeps.
-const SKY_POS_START  = new THREE.Vector3( 0.3, 1.0,  0.5);
-const SKY_POS_END    = new THREE.Vector3(-0.3, 1.8, -0.4);
-const SKY_LOOK_START = new THREE.Vector3( 8.0, 0.0,  2.0); // horizon — see landscape
-const SKY_LOOK_END   = new THREE.Vector3( 1.0, 7.0, -6.0); // tilt up — see clouds/sky
-const SKY_FOV        = 72;
+// ── Phase 3 —   Bedroom : camera orbits inside the sphere at modest radius ─────
+// Camera at radius 8 so it's a sizable distance from center — sphere interior visible.
+const SKY_ORBIT_RADIUS = 2.0;
+const SKY_ORBIT_Y      = 2.0;
+const SKY_LOOK_Y       = 0.5;
+const SKY_ANGLE_START  =  Math.PI * 2;
+const SKY_ANGLE_END    = -Math.PI * 0.60;
+const SKY_FOV          = 72;
 
-// ── Phase 4 — Above Clouds: camera at origin, look pans across mountain scene ──
-// Orbit has no meaning inside a sphere — camera stays fixed, look direction sweeps.
-const CLOUD_POS_START  = new THREE.Vector3( 0.0, 0.0,  0.0);
-const CLOUD_POS_END    = new THREE.Vector3( 0.0, 0.5,  0.0);
-const CLOUD_LOOK_START = new THREE.Vector3( 8.0,-0.5,  0.0); // looking at snowy mountains
-const CLOUD_LOOK_END   = new THREE.Vector3(-4.0, 0.0, -8.0); // pan left to tree line
-const CLOUD_FOV        = 76;
+// ── Phase 4 — Above Clouds: camera orbits inside sphere, wider radius ─────────
+const CLOUD_ORBIT_RADIUS = 35.0;
+const CLOUD_ORBIT_Y      = 1.5;
+const CLOUD_LOOK_Y       = 0.0;
+const CLOUD_ANGLE_START  =  Math.PI * 0.30;
+const CLOUD_ANGLE_END    = -Math.PI * 0.80;
+const CLOUD_FOV          = 76;
 
-// ── Phase 5 — Enchanted Forest: camera at origin, look drifts down forest path ─
-const FOREST_POS_START  = new THREE.Vector3(0.0, 0.5, 0.0);
-const FOREST_POS_END    = new THREE.Vector3(0.0, 0.2, 0.0);
-const FOREST_LOOK_START = new THREE.Vector3(0.0, 0.5, 8.0); // down the forest path
-const FOREST_LOOK_END   = new THREE.Vector3(6.0, 1.0, 4.0); // pan right through trees
-const FOREST_FOV        = 70;
+// ── Phase 5 — Enchanted Forest: camera orbits inside sphere, looking toward center
+const FOREST_ORBIT_RADIUS = 35.0;
+const FOREST_ORBIT_Y      = 1.5;
+const FOREST_LOOK_Y       = 0.5;
+const FOREST_ANGLE_START  =  Math.PI * 0.40;
+const FOREST_ANGLE_END    = -Math.PI * 0.70;
+const FOREST_FOV          = 70;
 
 // ── Phase 6 — Star Destroyer Hangar: slower, wider 360 orbit ─────────────────
 const HANGAR_ORBIT_RADIUS = 6.0;
@@ -65,8 +67,7 @@ const HANGAR_ANGLE_START  = Math.PI * 0.85;
 const HANGAR_ANGLE_END    = HANGAR_ANGLE_START - Math.PI * 1.05;
 const HANGAR_FOV          = 64;
 
-const _pos  = new THREE.Vector3();
-const _look = new THREE.Vector3();
+const _pos = new THREE.Vector3();
 
 function setFov(camera: THREE.Camera, fov: number, delta: number) {
   if (!(camera instanceof THREE.PerspectiveCamera)) return;
@@ -158,45 +159,26 @@ export default function CameraController() {
       return;
     }
 
-    // ── Phase 3: Anime Sky — float upward inside the skybox ──────────────────
+    // ── Phase 3: Anime Sky — orbit inside sphere at sizable radius ───────────
     if (gp < PHASES[4].start) {
-      const pp    = phaseProgress(3, gp);
-      // smooth ease-in-out
-      const eased = pp < 0.5 ? 2 * pp * pp : 1 - Math.pow(-2 * pp + 2, 2) / 2;
-
-      _pos.lerpVectors(SKY_POS_START, SKY_POS_END, eased);
-      _look.lerpVectors(SKY_LOOK_START, SKY_LOOK_END, eased);
-      camera.position.lerp(_pos, 2.5 * delta);
-      camera.lookAt(_look);
-      setFov(camera, SKY_FOV, delta);
+      const pp = phaseProgress(3, gp);
+      setOrbitCamera(camera, pp, SKY_ORBIT_RADIUS, SKY_ORBIT_Y, SKY_LOOK_Y, SKY_ANGLE_START, SKY_ANGLE_END, SKY_FOV, delta, 2.0);
       setFogDensity(fog, 0.0002, 10 * delta);
       return;
     }
 
-    // ── Phase 4: Above Clouds — camera fixed at origin, look pans ───────────
+    // ── Phase 4: Above Clouds — orbit inside sphere ───────────────────────────
     if (gp < PHASES[5].start) {
-      const pp    = phaseProgress(4, gp);
-      const eased = pp < 0.5 ? 2 * pp * pp : 1 - Math.pow(-2 * pp + 2, 2) / 2;
-
-      _pos.lerpVectors(CLOUD_POS_START, CLOUD_POS_END, eased);
-      _look.lerpVectors(CLOUD_LOOK_START, CLOUD_LOOK_END, eased);
-      camera.position.lerp(_pos, 1.5 * delta);
-      camera.lookAt(_look);
-      setFov(camera, CLOUD_FOV, delta);
+      const pp = phaseProgress(4, gp);
+      setOrbitCamera(camera, pp, CLOUD_ORBIT_RADIUS, CLOUD_ORBIT_Y, CLOUD_LOOK_Y, CLOUD_ANGLE_START, CLOUD_ANGLE_END, CLOUD_FOV, delta, 2.0);
       setFogDensity(fog, 0.00015, 10 * delta);
       return;
     }
 
-    // ── Phase 5: Enchanted Forest — camera near origin, look down path ───────
+    // ── Phase 5: Enchanted Forest — orbit inside sphere ──────────────────────
     if (gp < PHASES[6].start) {
-      const pp    = phaseProgress(5, gp);
-      const eased = pp < 0.5 ? 2 * pp * pp : 1 - Math.pow(-2 * pp + 2, 2) / 2;
-
-      _pos.lerpVectors(FOREST_POS_START, FOREST_POS_END, eased);
-      _look.lerpVectors(FOREST_LOOK_START, FOREST_LOOK_END, eased);
-      camera.position.lerp(_pos, 1.5 * delta);
-      camera.lookAt(_look);
-      setFov(camera, FOREST_FOV, delta);
+      const pp = phaseProgress(5, gp);
+      setOrbitCamera(camera, pp, FOREST_ORBIT_RADIUS, FOREST_ORBIT_Y, FOREST_LOOK_Y, FOREST_ANGLE_START, FOREST_ANGLE_END, FOREST_FOV, delta, 2.0);
       setFogDensity(fog, 0.00035, 10 * delta);
       return;
     }
