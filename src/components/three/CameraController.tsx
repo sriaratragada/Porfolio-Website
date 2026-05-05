@@ -20,7 +20,7 @@ const MAN_START = new THREE.Vector3(-2,  8, 17);
 const MAN_END   = new THREE.Vector3( 0,  3,  1);
 
 // ── Phase 1 — Bus: 180° orbit, bus centred, sky sphere as full backdrop ───────
-const BUS_ORBIT_RADIUS = 2.75; // Lower = closer zoom, higher = wider view
+const BUS_ORBIT_RADIUS = 8.0; // Lower = closer zoom, higher = wider view
 const BUS_ORBIT_Y      = 3.0; // Camera height
 const BUS_LOOK_Y       = 2.5; // What vertical point the camera stares at
 const BUS_ANGLE_START  =  Math.PI * 0.65;

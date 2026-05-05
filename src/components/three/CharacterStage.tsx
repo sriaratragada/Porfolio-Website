@@ -108,9 +108,9 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
   const groupRef     = useRef<THREE.Group>(null);
   const spinY        = useRef(0);
   const hoverOffset  = useRef(config.nickname.length * 0.731);
-  const lastOpacity  = useRef(-1);
-  const dropTimer    = useRef(0);
-  const wasVisible   = useRef(false);
+  const lastOpacity   = useRef(-1);
+  const dropTimer     = useRef(0);
+  const wasVisibleRef = useRef(false);
 
   useEffect(() => {
     const box    = new THREE.Box3().setFromObject(scene);
@@ -128,37 +128,41 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
     scene.traverse((child) => {
       if (!(child as THREE.Mesh).isMesh) return;
       const mesh = child as THREE.Mesh;
-
-      if (config.backSide) {
-        // Photo sphere skyboxes: replace material with MeshBasicMaterial so the
-        // panoramic texture is self-illuminated regardless of scene lighting.
-        const oldMats = (Array.isArray(mesh.material) ? mesh.material : [mesh.material]) as THREE.Material[];
-        const newMats = oldMats.map(m => {
-          const src = m as THREE.MeshStandardMaterial;
-          const tex = src.map ?? src.emissiveMap ?? undefined;
-          return new THREE.MeshBasicMaterial({
-            map:         tex,
-            side:        THREE.BackSide,
-            transparent: true,
-            depthWrite:  false,
-            opacity:     0,
-          });
-        });
-        mesh.material = newMats.length === 1 ? newMats[0] : newMats;
-        return;
-      }
-
       const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+
       for (const m of mats as THREE.MeshStandardMaterial[]) {
         m.transparent = true;
         m.depthWrite  = false;
-        if (m.emissive !== undefined) {
+
+        if (config.backSide) {
+          // Photo sphere: render back faces so camera inside sees the panorama.
+          // Self-illuminate via emissiveMap so lighting direction doesn't matter.
+          m.side = THREE.BackSide;
+          const anyMat = m as any;
+          // Widen texture search — panorama may be in map, emissiveMap, or lightMap
+          const tex: THREE.Texture | null =
+            anyMat.map ?? anyMat.emissiveMap ?? anyMat.lightMap ?? null;
+          if (anyMat.emissive !== undefined) {
+            anyMat.emissiveMap       = tex;
+            anyMat.emissive          = new THREE.Color(1, 1, 1);
+            anyMat.emissiveIntensity = 1.0;
+            anyMat.roughness         = 1;
+            anyMat.metalness         = 0;
+          } else if (tex && anyMat.map == null) {
+            // MeshBasicMaterial: ensure the found texture is in map slot
+            anyMat.map = tex;
+          }
+        } else if (m.emissive !== undefined) {
           m.emissive.copy(emissiveColor);
           m.emissiveIntensity = config.tint.emissiveIntensity;
         }
+
         m.needsUpdate = true;
       }
     });
+    // Always force a fresh opacity pass after material setup —
+    // stale lastOpacity would suppress the update on new materials.
+    lastOpacity.current = -1;
   }, [scene, config]);
 
   useFrame((_, delta) => {
@@ -169,16 +173,18 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
     const pp      = phaseProgress(config.phaseIndex, gp);
 
     // ── Opacity ──────────────────────────────────────────────────
-    if (Math.abs(opacity - lastOpacity.current) > 0.002) {
+    const wasVisible = lastOpacity.current > 0.001;
+    const isVisible  = opacity > 0.001;
+    if (wasVisible !== isVisible || (isVisible && Math.abs(opacity - lastOpacity.current) > 0.002)) {
       lastOpacity.current = opacity;
-      groupRef.current.visible = opacity > 0.001;
+      groupRef.current.visible = isVisible;
       scene.traverse((child) => {
         if (!(child as THREE.Mesh).isMesh) return;
         const mesh = child as THREE.Mesh;
         const mats = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
         for (const m of mats as THREE.MeshStandardMaterial[]) {
           m.opacity    = opacity;
-          m.depthWrite = opacity > 0.95;
+          m.depthWrite = opacity > 0.95 && !config.backSide;
         }
       });
     }
@@ -189,8 +195,8 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
     // ── Hover (Bus only) ─────────────────────────────────────────
     if (config.hover) {
       const isVisible = opacity > 0.001;
-      if (isVisible && !wasVisible.current) dropTimer.current = 0;
-      wasVisible.current = isVisible;
+      if (isVisible && !wasVisibleRef.current) dropTimer.current = 0;
+      wasVisibleRef.current = isVisible;
       if (isVisible) dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
 
       const dropT = easeOutCubic(Math.min(1, dropTimer.current / 1.4));
