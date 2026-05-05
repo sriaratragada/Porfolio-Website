@@ -70,8 +70,9 @@ const FOREST_CAM_Y    = 1.0;
 const FOREST_CAM_R    = 0.5;
 const FOREST_FOV      = 70;
 
-// Reusable look-target vector (avoids per-frame allocation)
-const _lookTarget = new THREE.Vector3();
+// Distance from the fixed camera position to the look target point.
+// Large enough to always land on the visible sphere interior (radius ≈ 35).
+const PHOTO_SPHERE_LOOK_DIST = 25;
 
 // ── Phase 6 — Star Destroyer Hangar: slower, wider 360 orbit ─────────────────
 const HANGAR_ORBIT_RADIUS = 6.0;
@@ -81,7 +82,8 @@ const HANGAR_ANGLE_START  = Math.PI * 0.85;
 const HANGAR_ANGLE_END    = HANGAR_ANGLE_START - Math.PI * 1.05;
 const HANGAR_FOV          = 64;
 
-const _pos = new THREE.Vector3();
+const _pos        = new THREE.Vector3();
+const _lookTarget = new THREE.Vector3(); // reused by setPhotoSphereCamera to avoid per-frame allocation
 
 function setFov(camera: THREE.Camera, fov: number, delta: number) {
   if (!(camera instanceof THREE.PerspectiveCamera)) return;
@@ -145,7 +147,8 @@ function setPhotoSphereCamera(
     photoSphereStore.userElDelta = 0;
   }
 
-  // Scroll-driven base azimuth (eased sweep across the phase)
+  // Scroll-driven base azimuth — ease-out curve (power 2.5) for a slower
+  // start that accelerates mid-phase, giving a natural cinematic sweep feel.
   const eased  = 1 - Math.pow(1 - progress, 2.5);
   const baseAz = THREE.MathUtils.lerp(azStart, azEnd, eased);
 
@@ -167,11 +170,10 @@ function setPhotoSphereCamera(
   camera.position.lerp(_pos, 4 * delta);
 
   // Look target: project the spherical look direction outward from camera
-  const lookDist = 25;
   _lookTarget.set(
-    _pos.x + Math.sin(totalAz) * Math.cos(elevation) * lookDist,
-    camY     + Math.sin(elevation)                    * lookDist,
-    _pos.z + Math.cos(totalAz) * Math.cos(elevation) * lookDist,
+    _pos.x + Math.sin(totalAz) * Math.cos(elevation) * PHOTO_SPHERE_LOOK_DIST,
+    camY     + Math.sin(elevation)                    * PHOTO_SPHERE_LOOK_DIST,
+    _pos.z + Math.cos(totalAz) * Math.cos(elevation) * PHOTO_SPHERE_LOOK_DIST,
   );
   camera.lookAt(_lookTarget);
 
