@@ -1,5 +1,5 @@
 import type { Metadata } from 'next';
-import { bebasNeue, comicNeue } from '@/lib/fonts';
+import { bebasNeue, comicNeue, spaceGrotesk, jetbrainsMono } from '@/lib/fonts';
 import LenisProvider from '@/components/layout/LenisProvider';
 import Navigation from '@/components/layout/Navigation';
 import Footer from '@/components/layout/Footer';
@@ -8,8 +8,8 @@ import SceneCanvasLoader from '@/components/three/SceneCanvasLoader';
 import './globals.css';
 
 export const metadata: Metadata = {
-  title: 'Spider-Verse Portfolio',
-  description: 'A comic book styled personal portfolio',
+  title: 'Portfolio — 2026',
+  description: 'A high-end technical noir portfolio',
 };
 
 export default function RootLayout({
@@ -18,8 +18,11 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${bebasNeue.variable} ${comicNeue.variable}`}>
-      <body className="min-h-screen antialiased" style={{ fontFamily: 'var(--font-comic-neue), Comic Neue, cursive' }}>
+    <html
+      lang="en"
+      className={`${bebasNeue.variable} ${comicNeue.variable} ${spaceGrotesk.variable} ${jetbrainsMono.variable}`}
+    >
+      <body className="min-h-screen antialiased">
         <LenisProvider>
           <SceneCanvasLoader />
           <Navigation />

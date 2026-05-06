@@ -215,25 +215,27 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
         zIndex: 20,
       }}
     >
-      <p
-        ref={labelRef}
-        style={{ fontFamily: 'var(--font-bebas)', fontSize: '11px', letterSpacing: '0.18em', color: '#e62429', marginBottom: '10px', opacity: 0.85 }}
-      >
+      <p ref={labelRef} className="portfolio-label" style={{ marginBottom: '14px' }}>
         PORTFOLIO — 2026
       </p>
 
-      <h1
-        ref={nameRef}
-        style={{ fontFamily: 'var(--font-bebas)', fontSize: 'clamp(52px, 8vw, 96px)', lineHeight: 0.88, color: '#f0f0f0', textShadow: '3px 3px 0 #e62429', letterSpacing: '0.02em' }}
+      {/* Outer div carries data-text for the CSS ::before glitch ghost */}
+      <div
+        className="hero-name-wrap"
+        data-text={'YOUR\nNAME'}
+        style={{ fontSize: 'clamp(52px, 8vw, 96px)', lineHeight: 0.92 }}
       >
-        YOUR<br />NAME
-      </h1>
+        <h1
+          ref={nameRef}
+          className="hero-name-outlined"
+          style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+        >
+          YOUR<br />NAME
+        </h1>
+      </div>
 
-      <p
-        ref={roleRef}
-        style={{ fontFamily: 'var(--font-comic)', fontSize: '15px', color: 'rgba(170,187,255,0.75)', marginTop: '14px', letterSpacing: '0.04em' }}
-      >
-        Developer&ensp;·&ensp;Creator&ensp;·&ensp;Web Slinger
+      <p ref={roleRef} className="tagline-mono" style={{ marginTop: '22px' }}>
+        Developer<span className="sep">//</span>Creator<span className="sep">//</span>Web Slinger
       </p>
 
       <div

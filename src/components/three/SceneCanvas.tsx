@@ -12,6 +12,15 @@ import CameraController       from './CameraController';
 import PhotoSphereControls    from './PhotoSphereControls';
 import PostProcessingEffects  from './PostProcessing';
 
+if (typeof window !== 'undefined') {
+  const _warn = console.warn.bind(console);
+  console.warn = (...args: unknown[]) => {
+    const msg = typeof args[0] === 'string' ? args[0] : '';
+    if (msg.includes('THREE.Clock') || msg.includes('KHR_materials_pbrSpecularGlossiness')) return;
+    _warn(...args);
+  };
+}
+
 export default function SceneCanvas() {
   return (
     <div className="fixed inset-0 z-0">

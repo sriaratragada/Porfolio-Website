@@ -23,118 +23,126 @@ import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
 interface ModelConfig {
-  nickname:        string;
-  path:            string;
-  phaseIndex:      number;
-  draco:           boolean;
-  isEnv:           boolean;
-  centerAtOrigin:  boolean;
-  backSide:        boolean;
-  spinMult:        number;
-  hover:           boolean;
-  targetHeight:    number;
+  nickname: string;
+  path: string;
+  phaseIndex: number;
+  draco: boolean;
+  isEnv: boolean;
+  centerAtOrigin: boolean;
+  unlit: boolean;
+  isSkybox: boolean;
+  spinMult: number;
+  hover: boolean;
+  targetHeight: number;
   positionOffset?: [number, number, number]; // world-space offset (non-env models)
-  tint:            { emissive: string; emissiveIntensity: number };
+  tint: { emissive: string; emissiveIntensity: number };
 }
 
 const MODELS: ModelConfig[] = [
   // ── Phase 0: Spider-Man (foreground character in Manhattan) ──────────────
   {
-    nickname:       'SpiderMan',
-    path:           '/models/spider-man_symbiote.glb',
-    phaseIndex:     0,
-    draco:          false,
-    isEnv:          false,
+    nickname: 'SpiderMan',
+    path: '/models/spider-man_symbiote.glb',
+    phaseIndex: 0,
+    draco: false,
+    isEnv: false,
     centerAtOrigin: false,
-    backSide:       false,
-    spinMult:       0.25,       // gentle slow spin to show off the model
-    hover:          false,
-    targetHeight:   1.9,        // ~human height
+    unlit: false,
+    isSkybox: false,
+    spinMult: 0.25,       // gentle slow spin to show off the model
+    hover: false,
+    targetHeight: 1.9,        // ~human height
     positionOffset: [-1, 0, 0], // centre-left, camera dives toward this
     tint: { emissive: '#200010', emissiveIntensity: 0.15 },
   },
   // ── Phase 1: Battle Bus ──────────────────────────────────────────────────
   {
-    nickname:       'Bus',
-    path:           '/models/battle-bus.glb',
-    phaseIndex:     1,
-    draco:          true,
-    isEnv:          true,
+    nickname: 'Bus',
+    path: '/models/battle-bus.glb',
+    phaseIndex: 1,
+    draco: true,
+    isEnv: true,
     centerAtOrigin: false,
-    backSide:       false,
-    spinMult:       0,
-    hover:          true,
-    targetHeight:   6,
+    unlit: false,
+    isSkybox: false,
+    spinMult: 0,
+    hover: true,
+    targetHeight: 6,
     tint: { emissive: '#1a1000', emissiveIntensity: 0.08 },
   },
   // ── Phase 2: Drift Race Track ────────────────────────────────────────────
   {
-    nickname:       'Track',
-    path:           '/models/drift_race_track_free.glb',
-    phaseIndex:     2,
-    draco:          false,
-    isEnv:          true,
+    nickname: 'Track',
+    path: '/models/drift_race_track_free.glb',
+    phaseIndex: 2,
+    draco: false,
+    isEnv: true,
     centerAtOrigin: false,
-    backSide:       false,
-    spinMult:       0,
-    hover:          false,
-    targetHeight:   12,
+    unlit: false,
+    isSkybox: false,
+    spinMult: 0,
+    hover: false,
+    targetHeight: 12,
     tint: { emissive: '#0a0500', emissiveIntensity: 0.06 },
   },
   // ── Phase 3: Jungle 360° photo sphere ──────────────────────────────────────────
   {
-    nickname:       'Jungle',
-    path:           '/models/jungle_02.glb',
-    phaseIndex:     3,
-    draco:          false,
-    isEnv:          true,
+    nickname: 'Jungle',
+    path: '/models/jungle_02.glb',
+    phaseIndex: 3,
+    draco: false,
+    isEnv: true,
     centerAtOrigin: true,
-    backSide:       true,
-    spinMult:       0,
-    hover:          false,
-    targetHeight:   64,
+    unlit: false,
+    isSkybox: true,
+    spinMult: 0,
+    hover: false,
+    targetHeight: 64,
     tint: { emissive: '#061a08', emissiveIntensity: 0.06 },
   },
   // ── Phase 4: Above-Clouds skybox (photo sphere) ──────────────────────────
   {
-    nickname:       'Clouds',
-    path:           '/models/skybox-above-clouds.glb',
-    phaseIndex:     4,
-    draco:          true,
-    isEnv:          true,
+    nickname: 'Clouds',
+    path: '/models/skybox-above-clouds.glb',
+    phaseIndex: 4,
+    draco: true,
+    isEnv: true,
     centerAtOrigin: true,
-    backSide:       true,
-    spinMult:       0,
-    hover:          false,
-    targetHeight:   70,
+    unlit: false,
+    isSkybox: true,
+    spinMult: 0,
+    hover: false,
+    targetHeight: 70,
     tint: { emissive: '#101822', emissiveIntensity: 0.05 },
   },
   // ── Phase 5: Enchanted Forest (photo sphere) ─────────────────────────────
   {
-    nickname:       'Forest',
-    path:           '/models/skybox-enchanted-forest.glb',
-    phaseIndex:     5,
-    draco:          true,
-    isEnv:          true,
+    nickname: 'Forest',
+    path: '/models/skybox-enchanted-forest.glb',
+    phaseIndex: 5,
+    draco: true,
+    isEnv: true,
     centerAtOrigin: true,
-    backSide:       true,
-    spinMult:       0,
-    hover:          false,
-    targetHeight:   64,
+    unlit: false,
+    isSkybox: true,
+    spinMult: 0,
+    hover: false,
+    targetHeight: 64,
     tint: { emissive: '#06170c', emissiveIntensity: 0.07 },
   },
   // ── Phase 6: Star Destroyer Hangar ──────────────────────────────────────
   {
-    nickname:       'Hangar',
-    path:           '/models/star-destroyer-hangar.glb',
-    phaseIndex:     6,
-    draco:          true,
-    isEnv:          true,
+    nickname: 'Hangar',
+    path: '/models/star-destroyer-hangar.glb',
+    phaseIndex: 6,
+    draco: true,
+    isEnv: true,
     centerAtOrigin: true,
-    backSide:       false,
-    spinMult:       0,
-    hover:          false,
-    targetHeight:   22,
+    unlit: false,
+    isSkybox: false,
+    spinMult: 0,
+    hover: false,
+    targetHeight: 22,
     tint: { emissive: '#080d14', emissiveIntensity: 0.08 },
   },
 ];
@@ -144,13 +152,13 @@ function easeOutCubic(t: number): number {
 }
 
 function EnvironmentModel({ config }: { config: ModelConfig }) {
-  const { scene }   = useGLTF(config.path, config.draco);
-  const groupRef    = useRef<THREE.Group>(null);
-  const spinY       = useRef(0);
+  const { scene } = useGLTF(config.path, config.draco);
+  const groupRef = useRef<THREE.Group>(null);
+  const spinY = useRef(0);
   const hoverOffset = useRef(config.nickname.length * 0.731);
   const lastOpacity = useRef(-1);
-  const dropTimer   = useRef(0);
-  const wasVisible  = useRef(false);
+  const dropTimer = useRef(0);
+  const wasVisible = useRef(false);
 
   // ── Flat cached material list — populated ONCE at load, never traversed in useFrame ──
   // Holds THREE.Material (base class) so we can store both MeshBasicMaterial
@@ -159,10 +167,10 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
 
   useEffect(() => {
     // Scale + position the scene
-    const box    = new THREE.Box3().setFromObject(scene);
-    const size   = box.getSize(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const scale  = config.targetHeight / size.y;
+    const scale = config.targetHeight / size.y;
 
     scene.scale.setScalar(scale);
     const originY = config.centerAtOrigin ? -center.y * scale : -box.min.y * scale;
@@ -175,45 +183,37 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
     scene.traverse((child) => {
       if (!(child as THREE.Mesh).isMesh) return;
       const mesh = child as THREE.Mesh;
-      const ms   = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
-      if (config.backSide) {
-        // ── Photo sphere: camera is INSIDE, so we need back-faces + no lighting.
+      if (config.unlit) {
         // Replace each material with MeshBasicMaterial (map-only, no lighting).
-        // This is the Three.js-idiomatic way to render Google Street View-style
-        // panoramas — MeshStandardMaterial emissive hacks fail when the source
-        // material is already a MeshBasicMaterial (no emissive property).
         const newMats: THREE.MeshBasicMaterial[] = [];
         for (const m of ms) {
           const anyMat = m as any;
-          // Hunt for the panorama texture across all common slots.
-          // KHR_materials_pbrSpecularGlossiness diffuseTexture → material.map
-          // Standard emissive panoramas                         → material.emissiveMap
           const tex: THREE.Texture | null =
             anyMat.map ?? anyMat.emissiveMap ?? anyMat.lightMap ?? anyMat.aoMap ?? null;
 
           const basicMat = new THREE.MeshBasicMaterial({
-            map:         tex,
-            // DoubleSide instead of BackSide — bypasses face culling entirely.
-            // This fixes GLBs with doubleSided:false (e.g. skybox-above-clouds)
-            // where BackSide would cull the inner face visible to the camera.
-            side:        THREE.DoubleSide,
+            map: tex,
+            side: config.isSkybox ? THREE.DoubleSide : (anyMat.side ?? THREE.FrontSide),
             transparent: true,
-            opacity:     1,
-            depthWrite:  false,
+            opacity: 1,
+            depthWrite: false,
           });
 
           newMats.push(basicMat);
           mats.push(basicMat);
         }
-        // Swap material(s) on the mesh so Three.js renders with the new material
         mesh.material = newMats.length === 1 ? newMats[0] : newMats;
+        if (config.isSkybox) {
+          mesh.renderOrder = -10;
+        }
 
       } else {
         // ── Opaque / non-skybox: keep existing MeshStandardMaterial, just configure it
         for (const m of ms as THREE.MeshStandardMaterial[]) {
           m.transparent = true;
-          m.depthWrite  = true; // restored to false during fade via useFrame
+          m.depthWrite = true; // restored to false during fade via useFrame
           if (m.emissive !== undefined) {
             m.emissive.copy(emissiveColor);
             m.emissiveIntensity = config.tint.emissiveIntensity;
@@ -224,29 +224,29 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
       }
     });
 
-    cachedMats.current  = mats;
+    cachedMats.current = mats;
     lastOpacity.current = -1; // force a write on first frame
   }, [scene, config]);
 
   useFrame((_, delta) => {
     if (!groupRef.current) return;
 
-    const gp      = scrollStore.globalProgress;
+    const gp = scrollStore.globalProgress;
     const opacity = phaseOpacity(config.phaseIndex, gp, 0.06);
-    const pp      = phaseProgress(config.phaseIndex, gp);
+    const pp = phaseProgress(config.phaseIndex, gp);
 
     // ── Opacity — O(n) write only when value changes meaningfully ────────────
     const nowVisible = opacity > 0.001;
     if (wasVisible.current !== nowVisible || (nowVisible && Math.abs(opacity - lastOpacity.current) > 0.002)) {
-      lastOpacity.current   = opacity;
-      wasVisible.current    = nowVisible;
+      lastOpacity.current = opacity;
+      wasVisible.current = nowVisible;
       groupRef.current.visible = nowVisible;
 
       // Direct writes to cached flat array — no traversal
       for (const m of cachedMats.current) {
         (m as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial).opacity = opacity;
         // Restore depthWrite for opaque non-skybox materials when fully visible
-        if (!config.backSide) {
+        if (!config.isSkybox) {
           m.depthWrite = opacity > 0.95;
         }
       }
@@ -296,11 +296,11 @@ export default function CharacterStage() {
 }
 
 // Preload all models (race track excluded — at 33 MB it's loaded on-demand)
-useGLTF.preload('/models/spider-man_symbiote.glb',        false);
-useGLTF.preload('/models/battle-bus.glb',                 true);
-useGLTF.preload('/models/jungle_02.glb',                  false);
-useGLTF.preload('/models/skybox-above-clouds.glb',        true);
-useGLTF.preload('/models/skybox-enchanted-forest.glb',    true);
-useGLTF.preload('/models/star-destroyer-hangar.glb',      true);
+useGLTF.preload('/models/spider-man_symbiote.glb', false);
+useGLTF.preload('/models/battle-bus.glb', true);
+useGLTF.preload('/models/jungle_02.glb', false);
+useGLTF.preload('/models/skybox-above-clouds.glb', true);
+useGLTF.preload('/models/skybox-enchanted-forest.glb', true);
+useGLTF.preload('/models/star-destroyer-hangar.glb', true);
 // drift_race_track_free.glb intentionally NOT preloaded (33 MB) — loads on scroll
 // modern_bedroom.glb removed (replaced by jungle_02)

@@ -1,24 +1,139 @@
 @import "tailwindcss";
 
 :root {
-  --spider-red: #e62429;
-  --spider-blue: #2196F3;
-  --spider-dark: #0a0a0f;
-  --spider-white: #f0f0f0;
-  --panel-border: #1a1a1a;
-  --panel-bg: rgba(10, 10, 15, 0.85);
+  --spider-red:     #e62429;
+  --spider-blue:    #2196F3;
+  --spider-dark:    #0a0a0f;
+  --spider-white:   #f0f0f0;
+  --panel-border:   #1a1a1a;
+  --panel-bg:       rgba(10, 10, 15, 0.85);
+
+  /* ── Noir design tokens ────────────────────────── */
+  --noir-cyan:        #00e5ff;
+  --noir-silver:      #c8d0e0;
+  --noir-red-glow:    rgba(230,36,41,0.55);
+  --noir-tracking-xl: 0.20em;
+  --noir-tracking-md: 0.12em;
 }
 
 @theme inline {
-  --color-spider-red: var(--spider-red);
-  --color-spider-blue: var(--spider-blue);
-  --color-spider-dark: var(--spider-dark);
+  --color-spider-red:   var(--spider-red);
+  --color-spider-blue:  var(--spider-blue);
+  --color-spider-dark:  var(--spider-dark);
   --color-spider-white: var(--spider-white);
   --color-panel-border: var(--panel-border);
-  --font-bebas: var(--font-bebas);
-  --font-bangers: var(--font-bebas); /* alias for components that use --font-bangers */
-  --font-comic: var(--font-comic-neue);
+  --color-noir-cyan:    var(--noir-cyan);
+  --font-bebas:    var(--font-bebas);
+  --font-bangers:  var(--font-bebas);
+  --font-comic:    var(--font-comic-neue);
+  --font-grotesk:  var(--font-space-grotesk);
+  --font-mono:     var(--font-jetbrains);
 }
+
+/* ── Glitch keyframes ────────────────────────────────────────────── */
+@keyframes glitch-red {
+  0%, 100% { transform: translate(0,0);      opacity: 0; }
+  10%       { transform: translate(-4px, 1px); opacity: 0.65; }
+  20%       { transform: translate( 4px,-1px); opacity: 0.65; }
+  30%       { transform: translate(0, 0);      opacity: 0; }
+}
+@keyframes glitch-idle {
+  0%, 96%, 100% { opacity: 1; }
+  97%           { opacity: 0.8; }
+  98%           { opacity: 1; }
+  99%           { opacity: 0.88; }
+}
+
+/* ── Hero name — outlined transparent text + red glow ───────────────── */
+.hero-name-outlined {
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  color: transparent;
+  -webkit-text-stroke: 1.5px rgba(240,240,240,0.96);
+  text-shadow:
+    0 0 28px var(--noir-red-glow),
+    0 0 56px rgba(230,36,41,0.28),
+    2px 2px 0 rgba(230,36,41,0.4);
+  animation: glitch-idle 8s infinite;
+  letter-spacing: 0.01em;
+}
+.hero-name-wrap {
+  position: relative;
+  display: inline-block;
+}
+/* Red chromatic ghost */
+.hero-name-wrap::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  font-size: inherit;
+  line-height: inherit;
+  letter-spacing: inherit;
+  white-space: pre-line;
+  color: transparent;
+  -webkit-text-stroke: 1.5px var(--spider-red);
+  animation: glitch-red 8s infinite;
+  pointer-events: none;
+}
+/* Red accent stripe below heading */
+.hero-name-wrap::after {
+  content: '';
+  position: absolute;
+  bottom: -8px;
+  left: 0;
+  width: 72px;
+  height: 2px;
+  background: var(--spider-red);
+  box-shadow: 0 0 10px var(--spider-red), 0 0 20px rgba(230,36,41,0.4);
+}
+
+/* ── Tagline — JetBrains Mono, electric cyan ──────────────────── */
+.tagline-mono {
+  font-family: var(--font-jetbrains), 'JetBrains Mono', monospace;
+  font-weight: 400;
+  font-size: 13px;
+  color: var(--noir-cyan);
+  letter-spacing: 0.05em;
+  text-shadow: 0 0 12px rgba(0,229,255,0.4);
+  opacity: 0.92;
+}
+.tagline-mono .sep { color: var(--spider-red); margin: 0 0.5em; }
+
+/* ── Portfolio label — 0.2em tracking ────────────────────────── */
+.portfolio-label {
+  font-family: var(--font-bebas), sans-serif;
+  font-size: 11px;
+  letter-spacing: var(--noir-tracking-xl);
+  color: var(--spider-red);
+  opacity: 0.9;
+}
+
+/* ── Navigation — luxury wide tracking + red active underline ───────── */
+.nav-noir {
+  letter-spacing: var(--noir-tracking-xl);
+  font-family: var(--font-bebas), sans-serif;
+}
+.nav-link-noir {
+  position: relative;
+  letter-spacing: var(--noir-tracking-xl);
+  transition: color 0.2s;
+  text-decoration: none;
+}
+.nav-link-noir::after {
+  content: '';
+  position: absolute;
+  bottom: -3px;
+  left: 0;
+  width: 0;
+  height: 1.5px;
+  background: var(--spider-red);
+  box-shadow: 0 0 6px var(--spider-red);
+  transition: width 0.25s ease;
+}
+.nav-link-noir:hover::after,
+.nav-link-noir.active::after { width: 100%; }
 
 * {
   margin: 0;
