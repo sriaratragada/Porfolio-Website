@@ -7,11 +7,11 @@
 // All text uses GSAP ScrollTrigger driven by the scroll container.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useEffect, useRef, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
-import { PHASES, TRANSITIONS } from '@/lib/scrollStore';
+import { scrollStore, PHASES, TRANSITIONS } from '@/lib/scrollStore';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -383,6 +383,61 @@ function PhaseDots({ scrollEl }: { scrollEl: HTMLElement | null }) {
   );
 }
 
+// ── Drag Indicator (Phases 3, 4, 5) ───────────────────────────────────────
+function DragIndicator() {
+  const [visible, setVisible] = useState(false);
+
+  useEffect(() => {
+    const check = (gp: number) => {
+      const active = gp >= PHASES[3].start && gp < PHASES[6].start;
+      setVisible(active);
+    };
+    const unsub = scrollStore.subscribe(check);
+    check(scrollStore.globalProgress);
+    return unsub;
+  }, []);
+
+  if (!visible) return null;
+
+  return (
+    <div
+      style={{
+        position: 'fixed',
+        bottom: '40px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        pointerEvents: 'none',
+        zIndex: 100,
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '8px',
+      }}
+      className="animate-pulse"
+    >
+      <div style={{
+        width: '24px',
+        height: '24px',
+        border: '2px solid rgba(255,255,255,0.8)',
+        borderRadius: '50%',
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+      }}>
+        <div style={{ width: '4px', height: '4px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }} />
+      </div>
+      <span style={{
+        fontFamily: 'var(--font-bebas)',
+        letterSpacing: '0.1em',
+        fontSize: '14px',
+        color: 'rgba(255,255,255,0.8)',
+      }}>
+        DRAG TO EXPLORE
+      </span>
+    </div>
+  );
+}
+
 // ── Main export ──────────────────────────────────────────────────────────────
 export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | null }) {
   return (
@@ -519,6 +574,9 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
 
       {/* Black flash at every phase transition */}
       <TransitionFlash scrollEl={scrollEl} />
+
+      {/* Blinking Drag Indicator for photo spheres */}
+      <DragIndicator />
     </>
   );
 }

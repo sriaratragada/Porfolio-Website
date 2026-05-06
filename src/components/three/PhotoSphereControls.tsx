@@ -11,11 +11,10 @@ import { useEffect, useRef } from 'react';
 import { useFrame, useThree } from '@react-three/fiber';
 import * as THREE from 'three';
 import { scrollStore, PHASES } from '@/lib/scrollStore';
-import { sceneManager } from '@/lib/sceneManager';
+import { sceneManager } from '@/lib/phaseController';
 import { photoSphereStore } from '@/lib/photoSphereStore';
 
 const DRAG_SPEED    = 0.005;
-const AUTO_ROTATE   = 0.018;  // rad/s idle drift
 const INERTIA_DECAY = 0.88;   // per-frame decay factor (normalised to 60fps)
 
 // Phases 3-5 are photo spheres
@@ -35,29 +34,40 @@ export default function PhotoSphereControls() {
 
   // ── Cursor via subscriber — no polling ───────────────────────────────────
   useEffect(() => {
-    const canvas = gl.domElement;
     const updateCursor = (gp: number) => {
       const active = gp >= PHASES[3].start && gp < PHASES[6].start;
-      if (!dragging.current) canvas.style.cursor = active ? 'grab' : '';
+      if (!dragging.current) {
+        document.body.style.cursor = active ? 'grab' : '';
+      }
     };
     const unsub = scrollStore.subscribe(updateCursor);
     updateCursor(scrollStore.globalProgress);
-    return unsub;
-  }, [gl]);
+    return () => {
+      unsub();
+      document.body.style.cursor = '';
+    };
+  }, []);
 
-  // ── Pointer events ───────────────────────────────────────────────────────
+  // ── Pointer events on Window ─────────────────────────────────────────────
   useEffect(() => {
-    const canvas = gl.domElement;
-
     function onDown(e: PointerEvent) {
       if (!inPhotoPhase()) return;
+      
+      // Ignore clicks on UI elements like buttons/links
+      if (e.target instanceof Element && e.target.closest('a, button')) {
+        return;
+      }
+      
       dragging.current = true;
       lastX.current = e.clientX;
       lastY.current = e.clientY;
       velX.current  = 0;
       velY.current  = 0;
-      canvas.setPointerCapture(e.pointerId);
-      canvas.style.cursor = 'grabbing';
+      
+      if (e.target instanceof Element) {
+        e.target.setPointerCapture(e.pointerId);
+      }
+      document.body.style.cursor = 'grabbing';
     }
 
     function onMove(e: PointerEvent) {
@@ -68,38 +78,43 @@ export default function PhotoSphereControls() {
       lastY.current = e.clientY;
 
       // Write to the ACTIVE phase's independent store slot
+      // Invert dx and dy to match "Google Maps" feel (drag scene = opposite of camera rotation)
       const phase = sceneManager.activePhase;
       const store = photoSphereStore[phase];
       if (store) {
-        velX.current = -dx * DRAG_SPEED;
-        velY.current = -dy * DRAG_SPEED;
-        store.azimuth  -= dx * DRAG_SPEED;
+        velX.current = dx * DRAG_SPEED;
+        velY.current = dy * DRAG_SPEED;
+        store.azimuth  += dx * DRAG_SPEED;
         store.elevation = THREE.MathUtils.clamp(
-          store.elevation - dy * DRAG_SPEED,
+          store.elevation + dy * DRAG_SPEED,
           -Math.PI * 0.35,
            Math.PI * 0.35,
         );
       }
     }
 
-    function onUp() {
-      dragging.current    = false;
-      canvas.style.cursor = inPhotoPhase() ? 'grab' : '';
+    function onUp(e: PointerEvent) {
+      if (!dragging.current) return;
+      dragging.current = false;
+      document.body.style.cursor = inPhotoPhase() ? 'grab' : '';
+      if (e.target instanceof Element && e.target.hasPointerCapture(e.pointerId)) {
+        e.target.releasePointerCapture(e.pointerId);
+      }
     }
 
-    canvas.addEventListener('pointerdown',   onDown);
+    window.addEventListener('pointerdown',   onDown);
     window.addEventListener('pointermove',   onMove);
     window.addEventListener('pointerup',     onUp);
     window.addEventListener('pointercancel', onUp);
     return () => {
-      canvas.removeEventListener('pointerdown',   onDown);
+      window.removeEventListener('pointerdown',   onDown);
       window.removeEventListener('pointermove',   onMove);
       window.removeEventListener('pointerup',     onUp);
       window.removeEventListener('pointercancel', onUp);
     };
-  }, [gl]);
+  }, []);
 
-  // ── Per-frame: inertia + auto-drift on active phase store ────────────────
+  // ── Per-frame: inertia ───────────────────────────────────────────────────
   useFrame((_, delta) => {
     if (!inPhotoPhase() || dragging.current) return;
 
@@ -117,8 +132,6 @@ export default function PhotoSphereControls() {
       const decay = Math.pow(INERTIA_DECAY, delta * 60);
       velX.current *= decay;
       velY.current *= decay;
-    } else {
-      store.azimuth += delta * AUTO_ROTATE;
     }
   });
 

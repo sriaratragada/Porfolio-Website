@@ -15,7 +15,7 @@ import {
 } from '@react-three/postprocessing';
 import { BloomEffect } from 'postprocessing';
 import * as THREE from 'three';
-import { sceneManager } from '@/lib/sceneManager';
+import { sceneManager } from '@/lib/phaseController';
 
 // Per-phase post-processing targets
 const PHASE_POST = [

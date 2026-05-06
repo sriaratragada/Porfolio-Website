@@ -4,7 +4,6 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
-import SceneManagerUpdater    from './SceneManagerUpdater';
 import ManhattanBackground    from './ManhattanBackground';
 import CharacterStage         from './CharacterStage';
 import SceneLighting          from './SceneLighting';
@@ -36,9 +35,6 @@ export default function SceneCanvas() {
         frameloop="always"
         dpr={[1, 1.5]}
       >
-        {/* ── Must run first — sets sceneManager state for all other useFrames ── */}
-        <SceneManagerUpdater />
-
         {/* Atmospheric fog — density animated per-phase by CameraController */}
         <fogExp2 attach="fog" args={[0x060810, 0.018]} />
 
@@ -49,7 +45,7 @@ export default function SceneCanvas() {
           <ManhattanBackground />
         </Suspense>
 
-        {/* Phase 0: Spider-Man + Phases 1-6: environment models */}
+        {/* Phases 0-6: models + skybox spheres */}
         <Suspense fallback={null}>
           <CharacterStage />
         </Suspense>
@@ -59,10 +55,10 @@ export default function SceneCanvas() {
           <PostProcessingEffects />
         </Suspense>
 
-        {/* Camera animates across all 7 phases */}
+        {/* Camera: data-driven, also runs phase state update at priority -100 */}
         <CameraController />
 
-        {/* Photo sphere drag + inertia — active in phases 4 and 5 */}
+        {/* Photo sphere drag + inertia — active in phases 3, 4, 5 */}
         <PhotoSphereControls />
 
         <AdaptiveDpr pixelated />
@@ -71,3 +67,4 @@ export default function SceneCanvas() {
     </div>
   );
 }
+

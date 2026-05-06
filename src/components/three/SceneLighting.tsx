@@ -9,7 +9,7 @@ import { useRef } from 'react';
 import { useFrame } from '@react-three/fiber';
 import * as THREE from 'three';
 import { scrollStore } from '@/lib/scrollStore';
-import { sceneManager } from '@/lib/sceneManager';
+import { sceneManager } from '@/lib/phaseController';
 
 interface LightingTarget {
   ambientIntensity: number;

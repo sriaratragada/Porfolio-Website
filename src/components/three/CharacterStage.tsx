@@ -1,183 +1,250 @@
 'use client';
 
-// ── Character Stage ───────────────────────────────────────────────────────────
-// Environment GLBs and character models, one per phase:
-//   Phase 0 — Spider-Man symbiote  (foreground character, Manhattan)
-//   Phase 1 — Battle Bus           (hover bob, orbit cam)
-//   Phase 2 — Race Track           (sweeping orbit)
-//   Phase 3 — Modern Bedroom       (interior orbit)
-//   Phase 4 — Above-Clouds skybox  (360°, photo sphere)
-//   Phase 5 — Enchanted Forest     (360°, photo sphere)
-//   Phase 6 — Star Destroyer Hangar (360° orbit)
+// ── Character Stage (v2) ──────────────────────────────────────────────────────
+// Clean separation:
+//   • GLTFModel — phases 0 (Spider-Man), 1 (Bus), 2 (Track), 6 (Hangar)
+//   • SkyboxSphere — phases 3 (Jungle), 4 (Clouds), 5 (Forest)
+//       Uses equirectangular JPEG textures on a simple sphere.
+//       No GLB material guesswork — eliminates the KHR_pbrSpecularGlossiness war.
 //
-// Performance fixes:
-//   • Materials are cached at load time — useFrame never traverses scene graph.
-//   • depthWrite only disabled for back-face skyboxes; opaque models keep it on.
-//   • visibility controlled via group.visible; opacity only blended during fades.
+// Every component uses the ref-based useFade pattern (matsRef, not mats value)
+// to avoid the stale-array race condition.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useRef, useEffect } from 'react';
-import { useFrame } from '@react-three/fiber';
+import { useRef, useEffect, useMemo } from 'react';
+import { useFrame, useLoader } from '@react-three/fiber';
 import { useGLTF } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
-
-interface ModelConfig {
-  nickname: string;
-  path: string;
-  phaseIndex: number;
-  draco: boolean;
-  isEnv: boolean;
-  centerAtOrigin: boolean;
-  unlit: boolean;
-  isSkybox: boolean;
-  spinMult: number;
-  hover: boolean;
-  targetHeight: number;
-  positionOffset?: [number, number, number]; // world-space offset (non-env models)
-  tint: { emissive: string; emissiveIntensity: number };
-}
-
-const MODELS: ModelConfig[] = [
-  // ── Phase 0: Spider-Man (foreground character in Manhattan) ──────────────
-  {
-    nickname: 'SpiderMan',
-    path: '/models/spider-man_symbiote.glb',
-    phaseIndex: 0,
-    draco: false,
-    isEnv: false,
-    centerAtOrigin: false,
-    unlit: false,
-    isSkybox: false,
-    spinMult: 0.25,       // gentle slow spin to show off the model
-    hover: false,
-    targetHeight: 1.9,        // ~human height
-    positionOffset: [-1, 0, 0], // centre-left, camera dives toward this
-    tint: { emissive: '#200010', emissiveIntensity: 0.15 },
-  },
-  // ── Phase 1: Battle Bus ──────────────────────────────────────────────────
-  {
-    nickname: 'Bus',
-    path: '/models/battle-bus.glb',
-    phaseIndex: 1,
-    draco: true,
-    isEnv: true,
-    centerAtOrigin: false,
-    unlit: false,
-    isSkybox: false,
-    spinMult: 0,
-    hover: true,
-    targetHeight: 6,
-    tint: { emissive: '#1a1000', emissiveIntensity: 0.08 },
-  },
-  // ── Phase 2: Drift Race Track ────────────────────────────────────────────
-  {
-    nickname: 'Track',
-    path: '/models/drift_race_track_free.glb',
-    phaseIndex: 2,
-    draco: false,
-    isEnv: true,
-    centerAtOrigin: false,
-    unlit: false,
-    isSkybox: false,
-    spinMult: 0,
-    hover: false,
-    targetHeight: 12,
-    tint: { emissive: '#0a0500', emissiveIntensity: 0.06 },
-  },
-  // ── Phase 3: Jungle 360° photo sphere ──────────────────────────────────────────
-  {
-    nickname: 'Jungle',
-    path: '/models/jungle_02.glb',
-    phaseIndex: 3,
-    draco: false,
-    isEnv: true,
-    centerAtOrigin: true,
-    unlit: false,
-    isSkybox: true,
-    spinMult: 0,
-    hover: false,
-    targetHeight: 64,
-    tint: { emissive: '#061a08', emissiveIntensity: 0.06 },
-  },
-  // ── Phase 4: Above-Clouds skybox (photo sphere) ──────────────────────────
-  {
-    nickname: 'Clouds',
-    path: '/models/skybox-above-clouds.glb',
-    phaseIndex: 4,
-    draco: true,
-    isEnv: true,
-    centerAtOrigin: true,
-    unlit: false,
-    isSkybox: true,
-    spinMult: 0,
-    hover: false,
-    targetHeight: 70,
-    tint: { emissive: '#101822', emissiveIntensity: 0.05 },
-  },
-  // ── Phase 5: Enchanted Forest (photo sphere) ─────────────────────────────
-  {
-    nickname: 'Forest',
-    path: '/models/skybox-enchanted-forest.glb',
-    phaseIndex: 5,
-    draco: true,
-    isEnv: true,
-    centerAtOrigin: true,
-    unlit: false,
-    isSkybox: true,
-    spinMult: 0,
-    hover: false,
-    targetHeight: 64,
-    tint: { emissive: '#06170c', emissiveIntensity: 0.07 },
-  },
-  // ── Phase 6: Star Destroyer Hangar ──────────────────────────────────────
-  {
-    nickname: 'Hangar',
-    path: '/models/star-destroyer-hangar.glb',
-    phaseIndex: 6,
-    draco: true,
-    isEnv: true,
-    centerAtOrigin: true,
-    unlit: false,
-    isSkybox: false,
-    spinMult: 0,
-    hover: false,
-    targetHeight: 22,
-    tint: { emissive: '#080d14', emissiveIntensity: 0.08 },
-  },
-];
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-function EnvironmentModel({ config }: { config: ModelConfig }) {
-  const { scene } = useGLTF(config.path, config.draco);
-  const groupRef = useRef<THREE.Group>(null);
-  const spinY = useRef(0);
-  const hoverOffset = useRef(config.nickname.length * 0.731);
-  const lastOpacity = useRef(-1);
-  const dropTimer = useRef(0);
-  const wasVisible = useRef(false);
+// ── useFade — ref-based material fade ────────────────────────────────────────
+// Accepts a ref to the mats array, NOT the array value.
+// The useEffect that populates cachedMats.current runs after render;
+// reading .current per-frame ensures we always see the populated list.
 
-  // ── Flat cached material list — populated ONCE at load, never traversed in useFrame ──
-  // Holds THREE.Material (base class) so we can store both MeshBasicMaterial
-  // (skybox photo spheres) and MeshStandardMaterial (everything else).
+function useFade(
+  groupRef: React.RefObject<THREE.Group | null>,
+  phaseIndex: number,
+  matsRef: React.RefObject<THREE.Material[]>,
+  restoreDepthWrite: boolean,
+) {
+  const lastOpacity = useRef(-1);
+  const wasVisible  = useRef(false);
+
+  useFrame(() => {
+    if (!groupRef.current) return;
+    const gp      = scrollStore.globalProgress;
+    const opacity = phaseOpacity(phaseIndex, gp, 0.06);
+
+    const nowVisible = opacity > 0.001;
+    if (
+      wasVisible.current !== nowVisible ||
+      (nowVisible && Math.abs(opacity - lastOpacity.current) > 0.002)
+    ) {
+      lastOpacity.current  = opacity;
+      wasVisible.current   = nowVisible;
+      groupRef.current.visible = nowVisible;
+
+      for (const m of matsRef.current) {
+        m.opacity = opacity;
+        if (restoreDepthWrite) {
+          m.depthWrite = opacity > 0.95;
+        }
+      }
+    }
+  });
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  GLTF MODELS — phases 0, 1, 2, 6
+// ═════════════════════════════════════════════════════════════════════════════
+
+// ── Phase 0: Spider-Man ──────────────────────────────────────────────────────
+function SpiderManModel() {
+  const { scene } = useGLTF('/models/spider-man_symbiote.glb', false);
+  const groupRef   = useRef<THREE.Group>(null);
+  const spinY      = useRef(0);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
-    // Scale + position the scene
-    const box = new THREE.Box3().setFromObject(scene);
-    const size = box.getSize(new THREE.Vector3());
+    const box   = new THREE.Box3().setFromObject(scene);
+    const size  = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
-    const scale = config.targetHeight / size.y;
+    const scale = 1.9 / size.y;
+    scene.scale.setScalar(scale);
+    scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+
+    const mats: THREE.Material[] = [];
+    const emissiveColor = new THREE.Color('#200010');
+
+    scene.traverse((child) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of ms as THREE.MeshStandardMaterial[]) {
+        m.transparent = true;
+        m.depthWrite  = true;
+        if (m.emissive !== undefined) {
+          m.emissive.copy(emissiveColor);
+          m.emissiveIntensity = 0.15;
+        }
+        m.needsUpdate = true;
+        mats.push(m);
+      }
+    });
+    cachedMats.current = mats;
+  }, [scene]);
+
+  useFade(groupRef, 0, cachedMats, true);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current?.visible) return;
+    const gp = scrollStore.globalProgress;
+    const pp = phaseProgress(0, gp);
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+    spinY.current += delta * 0.25;
+    groupRef.current.rotation.y = spinY.current;
+  });
+
+  return (
+    <group ref={groupRef} position={[-1, 0, 0]} visible={false}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+// ── Phase 1: Battle Bus ──────────────────────────────────────────────────────
+function BattleBusModel() {
+  const { scene } = useGLTF('/models/battle-bus.glb', true);
+  const groupRef    = useRef<THREE.Group>(null);
+  const dropTimer   = useRef(0);
+  const hoverOffset = useRef('Bus'.length * 0.731);
+  const cachedMats  = useRef<THREE.Material[]>([]);
+
+  useEffect(() => {
+    const box   = new THREE.Box3().setFromObject(scene);
+    const size  = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const scale = 6 / size.y;
+    scene.scale.setScalar(scale);
+    scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+
+    const mats: THREE.Material[] = [];
+    const emissiveColor = new THREE.Color('#1a1000');
+
+    scene.traverse((child) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of ms as THREE.MeshStandardMaterial[]) {
+        m.transparent = true;
+        m.depthWrite  = true;
+        if (m.emissive !== undefined) {
+          m.emissive.copy(emissiveColor);
+          m.emissiveIntensity = 0.08;
+        }
+        m.needsUpdate = true;
+        mats.push(m);
+      }
+    });
+    cachedMats.current = mats;
+  }, [scene]);
+
+  useFade(groupRef, 1, cachedMats, true);
+
+  useFrame((_, delta) => {
+    if (!groupRef.current?.visible) {
+      dropTimer.current = 0;
+      return;
+    }
+    const gp = scrollStore.globalProgress;
+    const pp = phaseProgress(1, gp);
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+
+    dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
+    const dropT = easeOutCubic(dropTimer.current / 1.4);
+    const dropY = THREE.MathUtils.lerp(20, 0, dropT);
+    hoverOffset.current += delta * 0.8;
+    groupRef.current.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, 0]} visible={false}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+// ── Phase 2: Race Track ──────────────────────────────────────────────────────
+function RaceTrackModel() {
+  const { scene } = useGLTF('/models/drift_race_track_free.glb', false);
+  const groupRef   = useRef<THREE.Group>(null);
+  const cachedMats = useRef<THREE.Material[]>([]);
+
+  useEffect(() => {
+    const box   = new THREE.Box3().setFromObject(scene);
+    const size  = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const scale = 12 / size.y;
+    scene.scale.setScalar(scale);
+    scene.position.set(-center.x * scale, -box.min.y * scale, -center.z * scale);
+
+    const mats: THREE.Material[] = [];
+    const emissiveColor = new THREE.Color('#0a0500');
+
+    scene.traverse((child) => {
+      if (!(child as THREE.Mesh).isMesh) return;
+      const mesh = child as THREE.Mesh;
+      const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
+      for (const m of ms as THREE.MeshStandardMaterial[]) {
+        m.transparent = true;
+        m.depthWrite  = true;
+        if (m.emissive !== undefined) {
+          m.emissive.copy(emissiveColor);
+          m.emissiveIntensity = 0.06;
+        }
+        m.needsUpdate = true;
+        mats.push(m);
+      }
+    });
+    cachedMats.current = mats;
+  }, [scene]);
+
+  useFade(groupRef, 2, cachedMats, true);
+
+  useFrame(() => {
+    if (!groupRef.current?.visible) return;
+    const gp = scrollStore.globalProgress;
+    const pp = phaseProgress(2, gp);
+    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+  });
+
+  return (
+    <group ref={groupRef} position={[0, 0, 0]} visible={false}>
+      <primitive object={scene} />
+    </group>
+  );
+}
+
+// ── Phase 6: Hangar ──────────────────────────────────────────────────────────
+function HangarModel() {
+  const { scene } = useGLTF('/models/star-destroyer-hangar.glb', true);
+  const groupRef   = useRef<THREE.Group>(null);
+  const cachedMats = useRef<THREE.Material[]>([]);
+
+  useEffect(() => {
+    const box   = new THREE.Box3().setFromObject(scene);
+    const size  = box.getSize(new THREE.Vector3());
+    const center = box.getCenter(new THREE.Vector3());
+    const scale = 22 / size.y;
 
     scene.scale.setScalar(scale);
-    const originY = config.centerAtOrigin ? -center.y * scale : -box.min.y * scale;
-    scene.position.set(-center.x * scale, originY, -center.z * scale);
+    scene.position.set(-center.x * scale, -center.y * scale, -center.z * scale);
 
-    // Apply materials + collect into flat cache
-    const emissiveColor = new THREE.Color(config.tint.emissive);
     const mats: THREE.Material[] = [];
 
     scene.traverse((child) => {
@@ -185,122 +252,143 @@ function EnvironmentModel({ config }: { config: ModelConfig }) {
       const mesh = child as THREE.Mesh;
       const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
-      if (config.unlit) {
-        // Replace each material with MeshBasicMaterial (map-only, no lighting).
-        const newMats: THREE.MeshBasicMaterial[] = [];
-        for (const m of ms) {
-          const anyMat = m as any;
-          const tex: THREE.Texture | null =
-            anyMat.map ?? anyMat.emissiveMap ?? anyMat.lightMap ?? anyMat.aoMap ?? null;
+      // Hangar needs MeshBasicMaterial — baked lighting, but it's the only model
+      // at x=3000 so no material-format conflicts.
+      const newMats: THREE.MeshBasicMaterial[] = [];
+      for (const m of ms) {
+        const anyMat = m as any;
+        const tex: THREE.Texture | null =
+          anyMat.map ?? anyMat.emissiveMap ?? anyMat.lightMap ?? anyMat.aoMap ?? null;
 
-          const basicMat = new THREE.MeshBasicMaterial({
-            map: tex,
-            side: config.isSkybox ? THREE.DoubleSide : (anyMat.side ?? THREE.FrontSide),
-            transparent: true,
-            opacity: 1,
-            depthWrite: false,
-          });
+        const basicMat = new THREE.MeshBasicMaterial({
+          map:  tex,
+          side: anyMat.side ?? THREE.FrontSide,
+          transparent: true,
+          opacity:     1,
+          depthWrite:  false,  // restored by useFade when fully opaque
+        });
 
-          newMats.push(basicMat);
-          mats.push(basicMat);
-        }
-        mesh.material = newMats.length === 1 ? newMats[0] : newMats;
-        if (config.isSkybox) {
-          mesh.renderOrder = -10;
-        }
-
-      } else {
-        // ── Opaque / non-skybox: keep existing MeshStandardMaterial, just configure it
-        for (const m of ms as THREE.MeshStandardMaterial[]) {
-          m.transparent = true;
-          m.depthWrite = true; // restored to false during fade via useFrame
-          if (m.emissive !== undefined) {
-            m.emissive.copy(emissiveColor);
-            m.emissiveIntensity = config.tint.emissiveIntensity;
-          }
-          m.needsUpdate = true;
-          mats.push(m);
-        }
+        newMats.push(basicMat);
+        mats.push(basicMat);
       }
+      mesh.material = newMats.length === 1 ? newMats[0] : newMats;
     });
 
     cachedMats.current = mats;
-    lastOpacity.current = -1; // force a write on first frame
-  }, [scene, config]);
+  }, [scene]);
 
-  useFrame((_, delta) => {
-    if (!groupRef.current) return;
+  useFade(groupRef, 6, cachedMats, true);
 
+  useFrame(() => {
+    if (!groupRef.current?.visible) return;
     const gp = scrollStore.globalProgress;
-    const opacity = phaseOpacity(config.phaseIndex, gp, 0.06);
-    const pp = phaseProgress(config.phaseIndex, gp);
-
-    // ── Opacity — O(n) write only when value changes meaningfully ────────────
-    const nowVisible = opacity > 0.001;
-    if (wasVisible.current !== nowVisible || (nowVisible && Math.abs(opacity - lastOpacity.current) > 0.002)) {
-      lastOpacity.current = opacity;
-      wasVisible.current = nowVisible;
-      groupRef.current.visible = nowVisible;
-
-      // Direct writes to cached flat array — no traversal
-      for (const m of cachedMats.current) {
-        (m as THREE.MeshBasicMaterial | THREE.MeshStandardMaterial).opacity = opacity;
-        // Restore depthWrite for opaque non-skybox materials when fully visible
-        if (!config.isSkybox) {
-          m.depthWrite = opacity > 0.95;
-        }
-      }
-    }
-
-    if (!nowVisible) return;
-
-    // Scale pulse (subtle; environments only nudge between 0.98–1.02)
+    const pp = phaseProgress(6, gp);
     groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
-
-    // ── Hover (Bus only) — drop-in + sine bob ────────────────────────────────
-    if (config.hover) {
-      if (!wasVisible.current) dropTimer.current = 0;
-      dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
-
-      const dropT = easeOutCubic(Math.min(1, dropTimer.current / 1.4));
-      const dropY = THREE.MathUtils.lerp(20, 0, dropT);
-      hoverOffset.current += delta * 0.8;
-      groupRef.current.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
-      groupRef.current.rotation.y = 0;
-      return;
-    }
-
-    // ── Slow spin (Spider-Man + any model with spinMult > 0) ─────────────────
-    if (config.spinMult > 0) {
-      spinY.current += delta * config.spinMult;
-      groupRef.current.rotation.y = spinY.current;
-    }
   });
 
-  const offset = config.positionOffset ?? [0, 0, 0];
   return (
-    <group ref={groupRef} position={offset} visible={false}>
+    <group ref={groupRef} position={[3000, 0, 0]} visible={false}>
       <primitive object={scene} />
     </group>
   );
 }
 
+// ═════════════════════════════════════════════════════════════════════════════
+//  SKYBOX SPHERES — phases 3, 4, 5
+// ═════════════════════════════════════════════════════════════════════════════
+// Equirectangular JPEG texture on an inverted sphere.
+// No GLB, no material format wars, no KHR extensions.
+
+function SkyboxSphere({
+  texturePath,
+  phaseIndex,
+  position,
+}: {
+  texturePath: string;
+  phaseIndex: number;
+  position: [number, number, number];
+}) {
+  const texture = useLoader(THREE.TextureLoader, texturePath);
+
+  // Ensure correct color space and orientation for the panorama
+  useEffect(() => {
+    texture.colorSpace = THREE.SRGBColorSpace;
+    // GLTF textures expect top-left UV origin. TextureLoader defaults to true.
+    texture.flipY = false;
+    texture.needsUpdate = true;
+  }, [texture]);
+
+  // Sphere geometry — created once, reused
+  const geometry = useMemo(
+    () => new THREE.SphereGeometry(500, 60, 40),
+    [],
+  );
+
+  // Material ref for useFade
+  const matRef    = useRef<THREE.MeshBasicMaterial>(null);
+  const groupRef  = useRef<THREE.Group>(null);
+  const cachedMats = useRef<THREE.Material[]>([]);
+
+  // Populate cachedMats once the material mounts
+  useEffect(() => {
+    if (matRef.current) {
+      cachedMats.current = [matRef.current];
+    }
+  }, []);
+
+  useFade(groupRef, phaseIndex, cachedMats, false);
+
+  return (
+    <group ref={groupRef} position={position} visible={false}>
+      {/* scale={[-1, 1, 1]} flips it inside-out horizontally so text isn't mirrored */}
+      <mesh geometry={geometry} scale={[-1, 1, 1]} renderOrder={-10}>
+        <meshBasicMaterial
+          ref={matRef}
+          map={texture}
+          side={THREE.BackSide}
+          transparent
+          depthWrite={false}
+          toneMapped={false}
+        />
+      </mesh>
+    </group>
+  );
+}
+
+// ═════════════════════════════════════════════════════════════════════════════
+//  MAIN EXPORT
+// ═════════════════════════════════════════════════════════════════════════════
+
 export default function CharacterStage() {
   return (
     <>
-      {MODELS.map((m) => (
-        <EnvironmentModel key={m.path} config={m} />
-      ))}
+      {/* GLTF models */}
+      <SpiderManModel />
+      <BattleBusModel />
+      <RaceTrackModel />
+      <HangarModel />
+
+      {/* Equirectangular skybox spheres — no GLB, no material wars */}
+      <SkyboxSphere
+        phaseIndex={3}
+        texturePath="/textures/jungle_panorama.jpg"
+        position={[0, 0, 0]}
+      />
+      <SkyboxSphere
+        phaseIndex={4}
+        texturePath="/textures/clouds_panorama.jpg"
+        position={[1000, 0, 0]}
+      />
+      <SkyboxSphere
+        phaseIndex={5}
+        texturePath="/textures/forest_panorama.jpg"
+        position={[2000, 0, 0]}
+      />
     </>
   );
 }
 
-// Preload all models (race track excluded — at 33 MB it's loaded on-demand)
+// Preload GLTF models (race track excluded — 33 MB, loaded on-demand)
 useGLTF.preload('/models/spider-man_symbiote.glb', false);
 useGLTF.preload('/models/battle-bus.glb', true);
-useGLTF.preload('/models/jungle_02.glb', false);
-useGLTF.preload('/models/skybox-above-clouds.glb', true);
-useGLTF.preload('/models/skybox-enchanted-forest.glb', true);
 useGLTF.preload('/models/star-destroyer-hangar.glb', true);
-// drift_race_track_free.glb intentionally NOT preloaded (33 MB) — loads on scroll
-// modern_bedroom.glb removed (replaced by jungle_02)
