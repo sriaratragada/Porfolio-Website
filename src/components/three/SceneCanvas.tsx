@@ -4,12 +4,13 @@ import { Suspense } from 'react';
 import { Canvas } from '@react-three/fiber';
 import { AdaptiveDpr, AdaptiveEvents } from '@react-three/drei';
 import * as THREE from 'three';
-import ManhattanBackground   from './ManhattanBackground';
-import CharacterStage        from './CharacterStage';
-import SceneLighting         from './SceneLighting';
-import CameraController      from './CameraController';
-import PhotoSphereControls   from './PhotoSphereControls';
-import PostProcessingEffects from './PostProcessing';
+import SceneManagerUpdater    from './SceneManagerUpdater';
+import ManhattanBackground    from './ManhattanBackground';
+import CharacterStage         from './CharacterStage';
+import SceneLighting          from './SceneLighting';
+import CameraController       from './CameraController';
+import PhotoSphereControls    from './PhotoSphereControls';
+import PostProcessingEffects  from './PostProcessing';
 
 export default function SceneCanvas() {
   return (
@@ -26,30 +27,33 @@ export default function SceneCanvas() {
         frameloop="always"
         dpr={[1, 1.5]}
       >
-        {/* Atmospheric fog — fades during character phases via CameraController */}
+        {/* ── Must run first — sets sceneManager state for all other useFrames ── */}
+        <SceneManagerUpdater />
+
+        {/* Atmospheric fog — density animated per-phase by CameraController */}
         <fogExp2 attach="fog" args={[0x060810, 0.018]} />
 
         <SceneLighting />
 
-        {/* Phase 0: Manhattan city zoom-in */}
+        {/* Phase 0: Manhattan city backdrop */}
         <Suspense fallback={null}>
           <ManhattanBackground />
         </Suspense>
 
-        {/* Phase 1-3: Environment models */}
+        {/* Phase 0: Spider-Man + Phases 1-6: environment models */}
         <Suspense fallback={null}>
           <CharacterStage />
         </Suspense>
 
-        {/* Post-processing — bloom + chromatic aberration */}
+        {/* Post-processing — bloom + vignette, phase-aware */}
         <Suspense fallback={null}>
           <PostProcessingEffects />
         </Suspense>
 
-        {/* Camera animates across all phases */}
+        {/* Camera animates across all 7 phases */}
         <CameraController />
 
-        {/* Photo sphere drag controls — active in phases 4 and 5 */}
+        {/* Photo sphere drag + inertia — active in phases 4 and 5 */}
         <PhotoSphereControls />
 
         <AdaptiveDpr pixelated />

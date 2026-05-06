@@ -11,8 +11,12 @@ import { useEffect, useRef, type ReactNode } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { PHASES, TRANSITIONS } from '@/lib/scrollStore';
 
 gsap.registerPlugin(ScrollTrigger);
+
+// Convert 0-1 phase bounds to 0-100 percentages for ScrollTrigger
+const pct = (v: number) => v * 100;
 
 const P = 900; // CSS perspective in px — shared vanishing point feel
 
@@ -265,8 +269,8 @@ function TransitionFlash({ scrollEl }: { scrollEl: HTMLElement | null }) {
   useEffect(() => {
     if (!scrollEl || !flashRef.current) return;
 
-    // Phase boundaries as percentage of scroll
-    const transitions = [14, 28, 42, 56, 70, 84];
+    // Phase boundaries derived from scrollStore PHASES — single source of truth
+    const transitions = TRANSITIONS.map(t => t * 100);
     const HALF_WIDTH  = 3; // ±3% around boundary = 6% total flash window
 
     const triggers = transitions.map((center) =>
@@ -392,8 +396,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 1 — Battle Bus */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={14}
-        phaseEnd={28}
+        phaseStart={pct(PHASES[1].start)}
+        phaseEnd={pct(PHASES[1].end)}
         label="ABOUT ME — PHASE 01"
         title={"WHO\nI AM"}
         align="left"
@@ -411,11 +415,11 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         </ul>
       </PhasePanel>
 
-      {/* Phase 2 — Dragon */}
+      {/* Phase 2 — Race Track */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={28}
-        phaseEnd={42}
+        phaseStart={pct(PHASES[2].start)}
+        phaseEnd={pct(PHASES[2].end)}
         label="EXPERIENCE — PHASE 02"
         title={"THE\nJOURNEY"}
         align="left"
@@ -436,11 +440,11 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         ))}
       </PhasePanel>
 
-      {/* Phase 3 — Anime Sky */}
+      {/* Phase 3 — Jungle 360° */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={42}
-        phaseEnd={56}
+        phaseStart={pct(PHASES[3].start)}
+        phaseEnd={pct(PHASES[3].end)}
         label="PROJECTS — PHASE 03"
         title={"WHAT\nI BUILT"}
         align="left"
@@ -469,8 +473,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 4 — Above the Clouds */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={56}
-        phaseEnd={70}
+        phaseStart={pct(PHASES[4].start)}
+        phaseEnd={pct(PHASES[4].end)}
         label="SKILLS — PHASE 04"
         title={"ABOVE\nTHE CLOUDS"}
         align="right"
@@ -483,8 +487,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 5 — Enchanted Forest */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={70}
-        phaseEnd={84}
+        phaseStart={pct(PHASES[5].start)}
+        phaseEnd={pct(PHASES[5].end)}
         label="CONTACT — PHASE 05"
         title={"ENCHANTED\nFOREST"}
         align="left"
@@ -497,8 +501,8 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       {/* Phase 6 — Imperial Hangar */}
       <PhasePanel
         scrollEl={scrollEl}
-        phaseStart={84}
-        phaseEnd={100}
+        phaseStart={pct(PHASES[6].start)}
+        phaseEnd={pct(PHASES[6].end)}
         label="FINAL — PHASE 06"
         title={"STAR\nDESTROYER"}
         align="right"

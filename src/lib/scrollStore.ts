@@ -1,26 +1,39 @@
 // ── Shared scroll state ───────────────────────────────────────────────────────
 // Plain JS object — GSAP/Lenis writes here, R3F useFrame reads without
 // triggering React re-renders.
+// _notify() fans out to any subscriber (e.g. PhotoSphereControls cursor).
 // ─────────────────────────────────────────────────────────────────────────────
+
+type ScrollSubscriber = (gp: number) => void;
 
 export const scrollStore = {
   globalProgress: 0,   // 0 → 1 over entire page
   scrollVelocity: 0,
+  _subs: [] as ScrollSubscriber[],
+
+  subscribe(fn: ScrollSubscriber): () => void {
+    this._subs.push(fn);
+    return () => { this._subs = this._subs.filter(s => s !== fn); };
+  },
+
+  _notify(gp: number): void {
+    for (const fn of this._subs) fn(gp);
+  },
 };
 
 // ── Phase configuration ───────────────────────────────────────────────────────
 // Phase 0: Manhattan city zoom-in
 // Phase 1: Battle Bus — flows in from the Manhattan sky
-// Phase 2: Dragon — fantasy environment orbit
-// Phase 3: Anime sky — camera drift inside a skybox
-// Phase 4: Above clouds — 360 skybox orbit
-// Phase 5: Enchanted forest — 360 skybox orbit
+// Phase 2: Race Track — sweeping orbit over a drift track
+// Phase 3: Jungle     — 360° jungle photo sphere (mouse-look)
+// Phase 4: Above clouds — 360 skybox (photo sphere, mouse-look)
+// Phase 5: Enchanted forest — 360 skybox (photo sphere, mouse-look)
 // Phase 6: Star Destroyer hangar — 360 environment orbit
 export const PHASES = [
   { id: 'manhattan', start: 0.00, end: 0.14 },
   { id: 'battlebus', start: 0.14, end: 0.28 },
-  { id: 'dragon',    start: 0.28, end: 0.42 },
-  { id: 'anime-sky', start: 0.42, end: 0.56 },
+  { id: 'track',     start: 0.28, end: 0.42 },
+  { id: 'jungle',    start: 0.42, end: 0.56 },
   { id: 'clouds',    start: 0.56, end: 0.70 },
   { id: 'forest',    start: 0.70, end: 0.84 },
   { id: 'hangar',    start: 0.84, end: 1.00 },

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useRef, createContext, useContext, type ReactNode } from 'react';
+import { useEffect, useState, createContext, useContext, type ReactNode } from 'react';
 import Lenis from 'lenis';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
@@ -15,41 +15,44 @@ export function useLenis() {
 }
 
 export default function LenisProvider({ children }: { children: ReactNode }) {
-  const lenisRef = useRef<Lenis | null>(null);
+  // Use useState so consumers get the live instance, not the null initial value
+  const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
-    const lenis = new Lenis({
+    const l = new Lenis({
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
     });
 
-    lenisRef.current = lenis;
-
     // Keep GSAP ScrollTrigger in sync
-    lenis.on('scroll', () => {
+    l.on('scroll', () => {
       ScrollTrigger.update();
     });
 
-    // Update the shared scroll store — R3F components read this in useFrame
-    lenis.on('scroll', (e: { progress: number; velocity: number }) => {
+    // Update the shared scroll store — R3F components read this in useFrame.
+    // Also fan out to subscribers (e.g. PhotoSphereControls cursor detection).
+    l.on('scroll', (e: { progress: number; velocity: number }) => {
       scrollStore.globalProgress = e.progress;
       scrollStore.scrollVelocity = e.velocity;
+      scrollStore._notify(e.progress);
     });
 
     // Drive lenis from GSAP's ticker (no duplicate RAF loops)
     gsap.ticker.add((time) => {
-      lenis.raf(time * 1000);
+      l.raf(time * 1000);
     });
 
     gsap.ticker.lagSmoothing(0);
 
+    setLenis(l);
+
     return () => {
-      lenis.destroy();
+      l.destroy();
     };
   }, []);
 
   return (
-    <LenisContext.Provider value={lenisRef.current}>
+    <LenisContext.Provider value={lenis}>
       {children}
     </LenisContext.Provider>
   );
