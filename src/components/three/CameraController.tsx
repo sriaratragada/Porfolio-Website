@@ -73,10 +73,16 @@ function applyOrbit(
     y = THREE.MathUtils.lerp(cfg.yStart, cfg.yEnd, eased2);
   }
 
+  let r = cfg.radius;
+  if (cfg.radiusStart !== undefined && cfg.radiusEnd !== undefined) {
+    // Use the same ease-out for radius expansion
+    r = THREE.MathUtils.lerp(cfg.radiusStart, cfg.radiusEnd, eased);
+  }
+
   _pos.set(
-    cfg.origin[0] + Math.sin(angle) * cfg.radius,
+    cfg.origin[0] + Math.sin(angle) * r,
     cfg.origin[1] + y,
-    cfg.origin[2] + Math.cos(angle) * cfg.radius,
+    cfg.origin[2] + Math.cos(angle) * r,
   );
 
   camera.position.lerp(_pos, cfg.lerpSpeed * delta);

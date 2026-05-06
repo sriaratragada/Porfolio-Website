@@ -53,7 +53,11 @@ export function phaseOpacity(phaseIndex: number, globalProgress: number, fadeSiz
   if (gp <= phase.start || gp >= phase.end) return 0;
 
   const fadeIn  = (gp - phase.start) / fadeSize;
-  const fadeOut = (phase.end - gp)   / fadeSize;
+  
+  // The final phase should stay fully visible at the very end of the scroll, instead of fading to black.
+  const isFinalPhase = phaseIndex === PHASES.length - 1;
+  const fadeOut = isFinalPhase ? 1 : (phase.end - gp) / fadeSize;
+  
   const t = Math.min(1, Math.min(fadeIn, fadeOut));
   // Smoothstep: eliminates the hard linear edge
   return t * t * (3 - 2 * t);

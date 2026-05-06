@@ -11,6 +11,8 @@ import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
+import { motion } from 'framer-motion';
+import { Sparkles, Code, Cpu, Layers, Mountain, Rocket } from 'lucide-react';
 import { scrollStore, PHASES, TRANSITIONS } from '@/lib/scrollStore';
 
 gsap.registerPlugin(ScrollTrigger);
@@ -29,9 +31,10 @@ interface PanelProps {
   title: string;
   children: ReactNode;
   align?: 'left' | 'right';
+  icon?: ReactNode;
 }
 
-function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, align = 'left' }: PanelProps) {
+function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, align = 'left', icon }: PanelProps) {
   const wrapRef  = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLParagraphElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
@@ -116,29 +119,41 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
         zIndex: 20,
       }}
     >
-      <p
+      <div
         ref={labelRef}
         style={{
-          fontFamily: 'var(--font-bebas)',
-          fontSize: '11px',
-          letterSpacing: '0.2em',
-          color: '#e62429',
-          marginBottom: '8px',
+          display: 'flex',
+          alignItems: 'center',
+          gap: '8px',
+          marginBottom: '12px',
           opacity: 0,
+          color: 'var(--noir-cyan)',
         }}
       >
-        {label}
-      </p>
+        {icon && <div className="text-cyan-400">{icon}</div>}
+        <p
+          style={{
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: '12px',
+            fontWeight: 600,
+            letterSpacing: '0.25em',
+            margin: 0,
+          }}
+        >
+          {label}
+        </p>
+      </div>
 
       <h2
         ref={titleRef}
+        className="text-gradient-cyan"
         style={{
-          fontFamily: 'var(--font-bebas)',
-          fontSize: 'clamp(40px, 5.5vw, 80px)',
-          lineHeight: 0.88,
-          color: '#f0f0f0',
-          textShadow: '2px 2px 0 rgba(230,36,41,0.6)',
-          letterSpacing: '0.02em',
+          fontFamily: 'var(--font-space-grotesk)',
+          fontWeight: 700,
+          fontSize: 'clamp(42px, 5vw, 64px)',
+          lineHeight: 0.95,
+          margin: 0,
+          letterSpacing: '-0.02em',
           opacity: 0,
         }}
       >
@@ -147,7 +162,8 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
 
       <div
         ref={bodyRef}
-        style={{ marginTop: '20px', color: 'rgba(240,240,240,0.75)', fontSize: '14px', lineHeight: 1.6, opacity: 0 }}
+        className="glass-panel"
+        style={{ marginTop: '24px', padding: '24px', color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.7, opacity: 0 }}
       >
         {children}
       </div>
@@ -215,49 +231,40 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
         zIndex: 20,
       }}
     >
-      <p ref={labelRef} className="portfolio-label" style={{ marginBottom: '14px' }}>
-        PORTFOLIO — 2026
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
+        <Sparkles size={14} className="text-rose-400" />
+        <p ref={labelRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.25em', color: 'var(--noir-silver)', margin: 0 }}>
+          PORTFOLIO — 2026
+        </p>
+      </div>
 
-      {/* Outer div carries data-text for the CSS ::before glitch ghost */}
-      <div
-        className="hero-name-wrap"
-        data-text={'YOUR\nNAME'}
-        style={{ fontSize: 'clamp(52px, 8vw, 96px)', lineHeight: 0.92 }}
-      >
+      <div style={{ fontSize: 'clamp(52px, 8vw, 96px)', lineHeight: 0.95 }}>
         <h1
           ref={nameRef}
-          className="hero-name-outlined"
-          style={{ fontSize: 'inherit', lineHeight: 'inherit' }}
+          className="text-gradient-rose"
+          style={{ fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}
         >
           YOUR<br />NAME
         </h1>
       </div>
 
-      <p ref={roleRef} className="tagline-mono" style={{ marginTop: '22px' }}>
-        Developer<span className="sep">//</span>Creator<span className="sep">//</span>Web Slinger
+      <p ref={roleRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: '15px', color: 'var(--noir-cyan)', letterSpacing: '0.05em', marginTop: '24px' }}>
+        Developer<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Creator<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Engineer
       </p>
 
       <div
         ref={ctaRef}
-        style={{ marginTop: '20px', display: 'flex', gap: '12px', pointerEvents: 'auto' }}
+        style={{ marginTop: '32px', pointerEvents: 'auto' }}
       >
-        <a
-          href="#bio"
-          style={{ fontFamily: 'var(--font-bebas)', fontSize: '13px', letterSpacing: '0.15em', padding: '10px 22px', border: '2px solid #e62429', background: '#e62429', color: '#fff', textDecoration: 'none', transition: 'background 0.2s, color 0.2s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'transparent'; (e.currentTarget as HTMLElement).style.color = '#e62429'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = '#e62429'; (e.currentTarget as HTMLElement).style.color = '#fff'; }}
+        <button
+          className="group relative overflow-hidden rounded-full border border-white/20 bg-white/5 px-8 py-3 text-sm font-semibold tracking-widest text-white backdrop-blur-md transition-all hover:border-white/40 hover:bg-white/10"
+          style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
-          EXPLORE
-        </a>
-        <Link
-          href="/blog"
-          style={{ fontFamily: 'var(--font-bebas)', fontSize: '13px', letterSpacing: '0.15em', padding: '10px 22px', border: '2px solid rgba(240,240,240,0.3)', background: 'transparent', color: 'rgba(240,240,240,0.6)', textDecoration: 'none', transition: 'border-color 0.2s, color 0.2s' }}
-          onMouseEnter={e => { (e.currentTarget as HTMLElement).style.borderColor = '#f0f0f0'; (e.currentTarget as HTMLElement).style.color = '#f0f0f0'; }}
-          onMouseLeave={e => { (e.currentTarget as HTMLElement).style.borderColor = 'rgba(240,240,240,0.3)'; (e.currentTarget as HTMLElement).style.color = 'rgba(240,240,240,0.6)'; }}
-        >
-          BLOG
-        </Link>
+          <span className="relative z-10 flex items-center gap-2">
+            EXPLORE THE UNIVERSE
+          </span>
+          <span className="absolute inset-0 z-0 scale-x-0 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 opacity-20 transition-transform duration-500 group-hover:scale-x-100" />
+        </button>
       </div>
     </div>
   );
@@ -458,6 +465,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         label="ABOUT ME — PHASE 01"
         title={"WHO\nI AM"}
         align="left"
+        icon={<Rocket size={16} />}
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
           The camera circles the iconic Fortnite Battle Bus drifting high above the clouds — a golden vehicle carrying you into the unknown. Just like dropping from the bus, every project starts with a leap.
@@ -480,6 +488,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         label="EXPERIENCE — PHASE 02"
         title={"THE\nJOURNEY"}
         align="left"
+        icon={<Layers size={16} />}
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
           A dragon's domain — ancient, vast, and commanding. The camera sweeps around a towering mythical landscape as the environment slowly rotates. Each role I've held shaped the scale of what I can build.
@@ -505,6 +514,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         label="PROJECTS — PHASE 03"
         title={"WHAT\nI BUILT"}
         align="left"
+        icon={<Code size={16} />}
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
           You are now inside an anime sky panorama — a hand-painted world of drifting clouds, warm light, and endless horizon. The camera orbits gently through this living painting, just as these projects came to life through craft and iteration.
@@ -535,6 +545,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         label="SKILLS — PHASE 04"
         title={"ABOVE\nTHE CLOUDS"}
         align="right"
+        icon={<Mountain size={16} />}
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
           Breaking through the cloud line, snowy peaks stretch to the horizon in every direction. You are orbiting inside a 360° mountain skybox — a reminder that the view from the top is earned, not given.
@@ -549,6 +560,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         label="CONTACT — PHASE 05"
         title={"ENCHANTED\nFOREST"}
         align="left"
+        icon={<Sparkles size={16} />}
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
           Ancient trees tower overhead as the camera drifts through a glowing enchanted forest. Light filters through every branch — a world that rewards those who look closely. Let's build something worth exploring.
@@ -563,6 +575,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         label="FINAL — PHASE 06"
         title={"STAR\nDESTROYER"}
         align="right"
+        icon={<Cpu size={16} />}
       >
         <p style={{ fontFamily: 'var(--font-comic)' }}>
           Inside a Star Destroyer hangar — cold steel, towering scale, and the hum of something immense. The camera orbits the interior of an Imperial warship. This is where the journey ends… and the next one begins.

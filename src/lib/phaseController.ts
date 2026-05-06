@@ -16,40 +16,43 @@ import { PHASES, phaseProgress as computePhaseProgress } from './scrollStore';
 export interface CraneDiveParams {
   type: 'crane';
   startPos: [number, number, number];
-  endPos:   [number, number, number];
-  lookAt:   [number, number, number];
-  fov:      number;
+  endPos: [number, number, number];
+  lookAt: [number, number, number];
+  fov: number;
   fogDensity: number;
 }
 
 export interface OrbitParams {
   type: 'orbit';
-  origin:     [number, number, number];
-  radius:     number;
-  y:          number;
-  lookY:      number;
+  origin: [number, number, number];
+  radius: number;
+  y: number;
+  lookY: number;
   angleStart: number;
-  angleEnd:   number;
-  fov:        number;
-  lerpSpeed:  number;
+  angleEnd: number;
+  fov: number;
+  lerpSpeed: number;
   fogDensity: number;
   /** If true, Y descends from yStart→yEnd over the orbit */
   descendingY?: boolean;
-  yStart?:      number;
-  yEnd?:        number;
+  yStart?: number;
+  yEnd?: number;
+  /** If provided, radius interpolates from radiusStart→radiusEnd */
+  radiusStart?: number;
+  radiusEnd?: number;
 }
 
 export interface PhotosphereParams {
   type: 'photosphere';
   centre: [number, number, number];
-  fov:    number;
+  fov: number;
   fogDensity: number;
 }
 
 export type CameraParams = CraneDiveParams | OrbitParams | PhotosphereParams;
 
 export interface PhaseConfig {
-  id:     string;
+  id: string;
   camera: CameraParams;
 }
 
@@ -61,10 +64,10 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'manhattan',
     camera: {
       type: 'crane',
-      startPos:   [-2, 8, 17],
-      endPos:     [0, 3, 1],
-      lookAt:     [-2, 4, 0],
-      fov:        68,
+      startPos: [-2, 8, 17],
+      endPos: [0, 3, 1],
+      lookAt: [-2, 4, 0],
+      fov: 68,
       fogDensity: 0.018,
     },
   },
@@ -73,14 +76,14 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'battlebus',
     camera: {
       type: 'orbit',
-      origin:     [0, 0, 0],
-      radius:     2.75,
-      y:          3.0,
-      lookY:      2.5,
+      origin: [0, 0, 0],
+      radius: 2.75,
+      y: 3.0,
+      lookY: 2.5,
       angleStart: Math.PI * 0.65,
-      angleEnd:   -Math.PI * 0.35,
-      fov:        62,
-      lerpSpeed:  3.5,
+      angleEnd: -Math.PI * 0.35,
+      fov: 62,
+      lerpSpeed: 3.5,
       fogDensity: 0.002,
     },
   },
@@ -89,18 +92,18 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'track',
     camera: {
       type: 'orbit',
-      origin:     [0, 0, 0],
-      radius:     20,
-      y:          10.0,          // ignored when descendingY is true
-      lookY:      2.0,
+      origin: [0, 0, 0],
+      radius: 20,
+      y: 10.0,          // ignored when descendingY is true
+      lookY: 2.0,
       angleStart: Math.PI * 0.55,
-      angleEnd:   -Math.PI * 0.10,
-      fov:        58,
-      lerpSpeed:  3.0,
+      angleEnd: -Math.PI * 0.10,
+      fov: 58,
+      lerpSpeed: 3.0,
       fogDensity: 0.001,
       descendingY: true,
-      yStart:     10.0,
-      yEnd:       3.5,
+      yStart: 10.0,
+      yEnd: 3.5,
     },
   },
   // Phase 3 — Jungle: 360° photosphere at (0, 0, 0)
@@ -108,8 +111,8 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'jungle',
     camera: {
       type: 'photosphere',
-      centre:     [0, 0.5, 0],
-      fov:        72,
+      centre: [0, 0.5, 0],
+      fov: 72,
       fogDensity: 0.00008,
     },
   },
@@ -118,8 +121,8 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'clouds',
     camera: {
       type: 'photosphere',
-      centre:     [1000, 0.5, 0],
-      fov:        76,
+      centre: [1000, 0.5, 0],
+      fov: 76,
       fogDensity: 0.00008,
     },
   },
@@ -128,8 +131,8 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'forest',
     camera: {
       type: 'photosphere',
-      centre:     [2000, 0.5, 0],
-      fov:        70,
+      centre: [2000, 0.5, 0],
+      fov: 70,
       fogDensity: 0.00012,
     },
   },
@@ -138,14 +141,16 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     id: 'hangar',
     camera: {
       type: 'orbit',
-      origin:     [3000, 0, 0],
-      radius:     2.5,
-      y:          4.0,
-      lookY:      3.1,
+      origin: [3000, 0, 0],
+      radius: 6.0,
+      radiusStart: 0.25,
+      radiusEnd: 7.5,
+      y: 4.0,
+      lookY: 3.1,
       angleStart: Math.PI * 0.85,
-      angleEnd:   Math.PI * 0.85 - Math.PI * 1.05,
-      fov:        64,
-      lerpSpeed:  2.4,
+      angleEnd: Math.PI * 0.85 - Math.PI * 1.05,
+      fov: 64,
+      lerpSpeed: 2.4,
       fogDensity: 0.00008,
     },
   },
@@ -155,9 +160,9 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
 // SceneLighting, PostProcessing, PhotoSphereControls all read these fields.
 
 export const sceneManager = {
-  activePhase:   0,     // 0–6 integer index
+  activePhase: 0,     // 0–6 integer index
   phaseProgress: 0,     // 0→1 within the active phase
-  inTransition:  false, // true within ±2% of any phase boundary
+  inTransition: false, // true within ±2% of any phase boundary
 };
 
 export function updatePhase(gp: number): void {
@@ -170,7 +175,7 @@ export function updatePhase(gp: number): void {
     }
   }
 
-  sceneManager.activePhase   = active;
+  sceneManager.activePhase = active;
   sceneManager.phaseProgress = computePhaseProgress(active, gp);
 
   // Transition zone: ±2% around each boundary

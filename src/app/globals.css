@@ -246,3 +246,41 @@ body {
     padding: 3rem 1rem;
   }
 }
+
+/* ── Elegant Gradient Typography ────────────────────────────────────────── */
+.text-gradient-cyan {
+  background: linear-gradient(135deg, #00e5ff 0%, #0077ff 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.text-gradient-rose {
+  background: linear-gradient(135deg, #ff0f7b 0%, #f89b29 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+.text-gradient-silver {
+  background: linear-gradient(135deg, #ffffff 0%, #a0a5b0 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  display: inline-block;
+}
+
+/* Elegant glass card */
+.glass-panel {
+  background: rgba(10, 10, 15, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
+}
