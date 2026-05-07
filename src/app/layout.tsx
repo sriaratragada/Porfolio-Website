@@ -27,7 +27,7 @@ export default function RootLayout({
           <SceneCanvasLoader />
           <Navigation />
           <div className="paper-grain" />
-          <main className="relative z-10">
+          <main className="relative z-10 pointer-events-none">
             {children}
           </main>
           <Footer />

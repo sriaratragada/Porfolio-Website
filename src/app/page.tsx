@@ -21,8 +21,8 @@ export default function Home() {
 
   return (
     <>
-      {/* 2100vh — 300vh per phase, slow cinematic scroll travel */}
-      <div ref={scrollRef} style={{ height: '2100vh' }} />
+      {/* 3500vh — 500vh per phase, slower cinematic scroll travel */}
+      <div ref={scrollRef} style={{ height: '3500vh' }} />
 
       {/* Fixed overlay: text panels + transition flashes + letterbox bars */}
       <ContentOverlay scrollEl={scrollEl} />

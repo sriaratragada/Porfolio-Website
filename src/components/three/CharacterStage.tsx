@@ -1,19 +1,12 @@
 'use client';
 
-// ── Character Stage (v2) ──────────────────────────────────────────────────────
-// Clean separation:
-//   • GLTFModel — phases 0 (Spider-Man), 1 (Bus), 2 (Track), 6 (Hangar)
-//   • SkyboxSphere — phases 3 (Jungle), 4 (Clouds), 5 (Forest)
-//       Uses equirectangular JPEG textures on a simple sphere.
-//       No GLB material guesswork — eliminates the KHR_pbrSpecularGlossiness war.
-//
-// Every component uses the ref-based useFade pattern (matsRef, not mats value)
-// to avoid the stale-array race condition.
+// ── Character Stage (v3) ──────────────────────────────────────────────────────
+// Added InfoHotspot for interactive 3D UX.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useRef, useEffect, useMemo } from 'react';
+import { useRef, useEffect, useMemo, useState } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { useGLTF } from '@react-three/drei';
+import { useGLTF, Html } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
@@ -21,10 +14,69 @@ function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
+// ── Info Hotspot ─────────────────────────────────────────────────────────────
+function InfoHotspot({ position, title, children, rotation, phaseIndex }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number }) {
+  const [isOpen, setIsOpen] = useState(false);
+  const triggerRef = useRef<HTMLDivElement>(null);
+  const cardRef = useRef<HTMLDivElement>(null);
+
+  useFrame(() => {
+    const gp = scrollStore.globalProgress;
+    const opacity = phaseOpacity(phaseIndex, gp, 0.06);
+    const pEvents = opacity > 0.1 ? 'auto' : 'none';
+    
+    if (triggerRef.current) {
+      triggerRef.current.style.opacity = opacity.toString();
+      triggerRef.current.style.pointerEvents = pEvents;
+    }
+    if (cardRef.current) {
+      cardRef.current.style.opacity = opacity.toString();
+      cardRef.current.style.pointerEvents = pEvents;
+    }
+  });
+
+  return (
+    <group position={position} rotation={rotation || [0, 0, 0]}>
+      {/* Interactive Trigger */}
+      {!isOpen && (
+        <Html center zIndexRange={[100, 0]}>
+          <div ref={triggerRef} style={{ transition: 'opacity 0.1s' }}>
+            <button 
+              onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+              className="flex items-center gap-2 px-4 py-2 bg-[#e62429]/90 hover:bg-[#e62429] text-white rounded-full backdrop-blur-md border border-red-400/50 transition-all cursor-pointer shadow-[0_0_20px_rgba(230,36,41,0.6)] animate-pulse uppercase tracking-widest text-sm font-bold"
+              style={{ fontFamily: 'var(--font-space-grotesk)' }}
+            >
+              <span>{title}</span>
+              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+            </button>
+          </div>
+        </Html>
+      )}
+      
+      {/* 3D HTML Card */}
+      {isOpen && (
+        <Html center transform position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]}>
+          <div 
+            ref={cardRef}
+            className="flex flex-col bg-black/70 backdrop-blur-xl border border-white/20 rounded-2xl p-5 text-white shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
+            style={{ width: '340px', fontFamily: 'var(--font-space-grotesk)' }}
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
+              <h3 className="text-xl font-bold uppercase" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.05em' }}>{title}</h3>
+              <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/50 hover:text-white transition-colors cursor-pointer p-1">✕</button>
+            </div>
+            <div className="text-sm font-light leading-relaxed text-white/90">
+              {children}
+            </div>
+          </div>
+        </Html>
+      )}
+    </group>
+  );
+}
+
 // ── useFade — ref-based material fade ────────────────────────────────────────
-// Accepts a ref to the mats array, NOT the array value.
-// The useEffect that populates cachedMats.current runs after render;
-// reading .current per-frame ensures we always see the populated list.
 
 function useFade(
   groupRef: React.RefObject<THREE.Group | null>,
@@ -66,7 +118,8 @@ function useFade(
 // ── Phase 0: Spider-Man ──────────────────────────────────────────────────────
 function SpiderManModel() {
   const { scene } = useGLTF('/models/spider-man_symbiote.glb', false);
-  const groupRef   = useRef<THREE.Group>(null);
+  const wrapperRef = useRef<THREE.Group>(null);
+  const modelRef   = useRef<THREE.Group>(null);
   const spinY      = useRef(0);
   const cachedMats = useRef<THREE.Material[]>([]);
 
@@ -99,20 +152,28 @@ function SpiderManModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(groupRef, 0, cachedMats, true);
+  useFade(wrapperRef, 0, cachedMats, true);
 
   useFrame((_, delta) => {
-    if (!groupRef.current?.visible) return;
+    if (!wrapperRef.current?.visible) return;
     const gp = scrollStore.globalProgress;
     const pp = phaseProgress(0, gp);
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+    modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
     spinY.current += delta * 0.25;
-    groupRef.current.rotation.y = spinY.current;
+    modelRef.current!.rotation.y = spinY.current;
   });
 
   return (
-    <group ref={groupRef} position={[-1, 0, 0]} visible={false}>
-      <primitive object={scene} />
+    <group ref={wrapperRef} position={[-1, 0, 0]} visible={false}>
+      <group ref={modelRef}>
+        <primitive object={scene} />
+      </group>
+      <InfoHotspot position={[2, 1.5, 0]} title="Sri Atragada" phaseIndex={0}>
+        <div className="flex flex-col gap-4">
+          <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-40 object-cover rounded-lg border border-white/10" />
+          <p>I am a Computer Science student at Stony Brook University with a minor in Finance. I build full-stack applications, scalable backend systems, and AI-driven platforms.</p>
+        </div>
+      </InfoHotspot>
     </group>
   );
 }
@@ -120,7 +181,8 @@ function SpiderManModel() {
 // ── Phase 1: Battle Bus ──────────────────────────────────────────────────────
 function BattleBusModel() {
   const { scene } = useGLTF('/models/battle-bus.glb', true);
-  const groupRef    = useRef<THREE.Group>(null);
+  const wrapperRef  = useRef<THREE.Group>(null);
+  const modelRef    = useRef<THREE.Group>(null);
   const dropTimer   = useRef(0);
   const hoverOffset = useRef('Bus'.length * 0.731);
   const cachedMats  = useRef<THREE.Material[]>([]);
@@ -154,27 +216,40 @@ function BattleBusModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(groupRef, 1, cachedMats, true);
+  useFade(wrapperRef, 1, cachedMats, true);
 
   useFrame((_, delta) => {
-    if (!groupRef.current?.visible) {
+    if (!wrapperRef.current?.visible) {
       dropTimer.current = 0;
       return;
     }
     const gp = scrollStore.globalProgress;
     const pp = phaseProgress(1, gp);
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+    modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
 
     dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
     const dropT = easeOutCubic(dropTimer.current / 1.4);
     const dropY = THREE.MathUtils.lerp(20, 0, dropT);
     hoverOffset.current += delta * 0.8;
-    groupRef.current.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
+    modelRef.current!.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]} visible={false}>
-      <primitive object={scene} />
+    <group ref={wrapperRef} position={[0, 0, 0]} visible={false}>
+      <group ref={modelRef}>
+        <primitive object={scene} />
+      </group>
+      <InfoHotspot position={[3.5, 3, 0]} title="SKILLS" phaseIndex={1}>
+        <div className="flex flex-col gap-4">
+          <p>My technical toolkit spans across languages and domains.</p>
+          <ul className="flex flex-col gap-2">
+            <li><strong className="text-white">Languages:</strong> Python, TypeScript, Java, C++, SQL</li>
+            <li><strong className="text-white">Frameworks:</strong> React, Spring Boot, FastAPI, LangChain</li>
+            <li><strong className="text-white">Databases:</strong> PostgreSQL, MongoDB, Redis, Pinecone</li>
+            <li><strong className="text-white">Tools:</strong> AWS, Docker, Node.js, PyTorch</li>
+          </ul>
+        </div>
+      </InfoHotspot>
     </group>
   );
 }
@@ -182,7 +257,8 @@ function BattleBusModel() {
 // ── Phase 2: Race Track ──────────────────────────────────────────────────────
 function RaceTrackModel() {
   const { scene } = useGLTF('/models/drift_race_track_free.glb', false);
-  const groupRef   = useRef<THREE.Group>(null);
+  const wrapperRef = useRef<THREE.Group>(null);
+  const modelRef   = useRef<THREE.Group>(null);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
@@ -214,18 +290,65 @@ function RaceTrackModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(groupRef, 2, cachedMats, true);
+  useFade(wrapperRef, 2, cachedMats, true);
 
   useFrame(() => {
-    if (!groupRef.current?.visible) return;
+    if (!wrapperRef.current?.visible) return;
     const gp = scrollStore.globalProgress;
     const pp = phaseProgress(2, gp);
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+    modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
   });
 
   return (
-    <group ref={groupRef} position={[0, 0, 0]} visible={false}>
-      <primitive object={scene} />
+    <group ref={wrapperRef} position={[0, 0, 0]} visible={false}>
+      <group ref={modelRef}>
+        <primitive object={scene} />
+      </group>
+      
+      {/* SBU Experience */}
+      <InfoHotspot position={[-4, 2, 2]} title="SBU Intern" phaseIndex={2}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <img src="/images/sbu.png" alt="SBU" className="w-12 h-12 rounded bg-white p-1" />
+            <div>
+              <p className="font-bold text-white">Stony Brook University</p>
+              <p className="text-xs opacity-70">Software Engineer Intern</p>
+            </div>
+          </div>
+          <p className="text-xs">Sep 2025 – Feb 2026</p>
+          <p className="text-xs opacity-80">Designed and shipped a Python NLP service that converts natural-language library queries into Boolean search expressions.</p>
+        </div>
+      </InfoHotspot>
+
+      {/* WEX Experience */}
+      <InfoHotspot position={[4, 2, -2]} title="WEX Engineer" phaseIndex={2}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <img src="/images/wex.png" alt="WEX" className="w-12 h-12 rounded bg-white p-1" />
+            <div>
+              <p className="font-bold text-white">WEX</p>
+              <p className="text-xs opacity-70">Incoming Security Engineer</p>
+            </div>
+          </div>
+          <p className="text-xs">May 2026</p>
+          <p className="text-xs opacity-80">Incoming Security Engineer driving impact across application security and DevSecOps.</p>
+        </div>
+      </InfoHotspot>
+
+      {/* Atlas Legacy */}
+      <InfoHotspot position={[0, 3, 5]} title="Atlas Legacy" phaseIndex={2}>
+        <div className="flex flex-col gap-4">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded bg-blue-600 flex items-center justify-center font-bold text-xl">A</div>
+            <div>
+              <p className="font-bold text-white">Atlas Legacy Inc.</p>
+              <p className="text-xs opacity-70">Software Engineer Intern</p>
+            </div>
+          </div>
+          <p className="text-xs">May 2025 – Aug 2025</p>
+          <p className="text-xs opacity-80">Built containerized AWS ECS deployment with GitHub Actions CI/CD pipelines, cutting release cycle time by 40%.</p>
+        </div>
+      </InfoHotspot>
     </group>
   );
 }
@@ -233,7 +356,8 @@ function RaceTrackModel() {
 // ── Phase 6: Hangar ──────────────────────────────────────────────────────────
 function HangarModel() {
   const { scene } = useGLTF('/models/star-destroyer-hangar.glb', true);
-  const groupRef   = useRef<THREE.Group>(null);
+  const wrapperRef = useRef<THREE.Group>(null);
+  const modelRef   = useRef<THREE.Group>(null);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
@@ -252,8 +376,6 @@ function HangarModel() {
       const mesh = child as THREE.Mesh;
       const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
 
-      // Hangar needs MeshBasicMaterial — baked lighting, but it's the only model
-      // at x=3000 so no material-format conflicts.
       const newMats: THREE.MeshBasicMaterial[] = [];
       for (const m of ms) {
         const anyMat = m as any;
@@ -277,18 +399,27 @@ function HangarModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(groupRef, 6, cachedMats, true);
+  useFade(wrapperRef, 6, cachedMats, true);
 
   useFrame(() => {
-    if (!groupRef.current?.visible) return;
+    if (!wrapperRef.current?.visible) return;
     const gp = scrollStore.globalProgress;
     const pp = phaseProgress(6, gp);
-    groupRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+    modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
   });
 
   return (
-    <group ref={groupRef} position={[3000, 0, 0]} visible={false}>
-      <primitive object={scene} />
+    <group ref={wrapperRef} position={[3000, 0, 0]} visible={false}>
+      <group ref={modelRef}>
+        <primitive object={scene} />
+      </group>
+      <InfoHotspot position={[0, 5, 10]} title="CONTACT" phaseIndex={6}>
+        <div className="flex flex-col gap-4">
+          <p>This is where the journey ends… and the next one begins. Reach out to me anytime.</p>
+          <p className="font-bold">Email: sridharatragada@gmail.com</p>
+          <p className="font-bold">Phone: (207) 303-5293</p>
+        </div>
+      </InfoHotspot>
     </group>
   );
 }
@@ -296,40 +427,35 @@ function HangarModel() {
 // ═════════════════════════════════════════════════════════════════════════════
 //  SKYBOX SPHERES — phases 3, 4, 5
 // ═════════════════════════════════════════════════════════════════════════════
-// Equirectangular JPEG texture on an inverted sphere.
-// No GLB, no material format wars, no KHR extensions.
 
 function SkyboxSphere({
   texturePath,
   phaseIndex,
   position,
+  children
 }: {
   texturePath: string;
   phaseIndex: number;
   position: [number, number, number];
+  children?: React.ReactNode;
 }) {
   const texture = useLoader(THREE.TextureLoader, texturePath);
 
-  // Ensure correct color space and orientation for the panorama
   useEffect(() => {
     texture.colorSpace = THREE.SRGBColorSpace;
-    // GLTF textures expect top-left UV origin. TextureLoader defaults to true.
     texture.flipY = false;
     texture.needsUpdate = true;
   }, [texture]);
 
-  // Sphere geometry — created once, reused
   const geometry = useMemo(
     () => new THREE.SphereGeometry(500, 60, 40),
     [],
   );
 
-  // Material ref for useFade
   const matRef    = useRef<THREE.MeshBasicMaterial>(null);
   const groupRef  = useRef<THREE.Group>(null);
   const cachedMats = useRef<THREE.Material[]>([]);
 
-  // Populate cachedMats once the material mounts
   useEffect(() => {
     if (matRef.current) {
       cachedMats.current = [matRef.current];
@@ -340,7 +466,6 @@ function SkyboxSphere({
 
   return (
     <group ref={groupRef} position={position} visible={false}>
-      {/* scale={[-1, 1, 1]} flips it inside-out horizontally so text isn't mirrored */}
       <mesh geometry={geometry} scale={[-1, 1, 1]} renderOrder={-10}>
         <meshBasicMaterial
           ref={matRef}
@@ -351,6 +476,7 @@ function SkyboxSphere({
           toneMapped={false}
         />
       </mesh>
+      {children}
     </group>
   );
 }
@@ -362,33 +488,61 @@ function SkyboxSphere({
 export default function CharacterStage() {
   return (
     <>
-      {/* GLTF models */}
       <SpiderManModel />
       <BattleBusModel />
       <RaceTrackModel />
       <HangarModel />
 
-      {/* Equirectangular skybox spheres — no GLB, no material wars */}
       <SkyboxSphere
         phaseIndex={3}
         texturePath="/textures/jungle_panorama.jpg"
         position={[0, 0, 0]}
-      />
+      >
+        {/* Phase 3 - Projects */}
+        <InfoHotspot position={[0, 0, -5]} title="PROJECTS" phaseIndex={3}>
+          <div className="flex flex-col gap-4">
+            <div>
+              <p className="font-bold text-white">Chronicle RPG Engine</p>
+              <p className="text-xs opacity-70">React, Python, Zustand, ChromaDB</p>
+              <p className="text-xs opacity-80 mt-1">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
+            </div>
+            <div className="h-px bg-white/10" />
+            <div>
+              <p className="font-bold text-white">FormFlow</p>
+              <p className="text-xs opacity-70">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
+              <p className="text-xs opacity-80 mt-1">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam.</p>
+            </div>
+          </div>
+        </InfoHotspot>
+      </SkyboxSphere>
+
       <SkyboxSphere
         phaseIndex={4}
         texturePath="/textures/clouds_panorama.jpg"
         position={[1000, 0, 0]}
-      />
+      >
+        <InfoHotspot position={[5, 0, -5]} title="ABOVE THE CLOUDS" phaseIndex={4}>
+          <div className="flex flex-col gap-2">
+            <p>Breaking through the cloud line, snowy peaks stretch to the horizon in every direction.</p>
+          </div>
+        </InfoHotspot>
+      </SkyboxSphere>
+
       <SkyboxSphere
         phaseIndex={5}
         texturePath="/textures/forest_panorama.jpg"
         position={[2000, 0, 0]}
-      />
+      >
+        <InfoHotspot position={[-5, 0, -5]} title="ENCHANTED FOREST" phaseIndex={5}>
+          <div className="flex flex-col gap-2">
+            <p>Ancient trees tower overhead as the camera drifts through a glowing enchanted forest.</p>
+          </div>
+        </InfoHotspot>
+      </SkyboxSphere>
     </>
   );
 }
 
-// Preload GLTF models (race track excluded — 33 MB, loaded on-demand)
 useGLTF.preload('/models/spider-man_symbiote.glb', false);
 useGLTF.preload('/models/battle-bus.glb', true);
 useGLTF.preload('/models/star-destroyer-hangar.glb', true);
