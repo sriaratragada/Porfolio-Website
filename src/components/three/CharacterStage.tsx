@@ -9,6 +9,7 @@ import { useFrame, useLoader } from '@react-three/fiber';
 import { useGLTF, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
+import { FireflyGame } from './FireflyGame';
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
@@ -25,12 +26,12 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
     const gp = scrollStore.globalProgress;
     // fadeSize=0.02 means it fades in completely within the first 2% of the phase, appearing very early!
     const newOpacity = phaseOpacity(phaseIndex, gp, 0.02);
-    
+
     // Only update state if it crossed the 0 threshold to avoid excessive re-renders
     if ((newOpacity > 0 && opacity === 0) || (newOpacity === 0 && opacity > 0)) {
       setOpacity(newOpacity);
     }
-    
+
     const pEvents = newOpacity > 0.1 ? 'auto' : 'none';
     if (triggerRef.current) {
       triggerRef.current.style.opacity = newOpacity.toString();
@@ -48,40 +49,40 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
     <group position={position} rotation={rotation || [0, 0, 0]}>
       <Float floatIntensity={1.5} speed={2.5} rotationIntensity={0.1}>
         {/* Interactive Trigger */}
-      {!isOpen && (
-        <Html center transform sprite zIndexRange={[100, 0]} scale={htmlScale}>
-          <div ref={triggerRef} style={{ transition: 'opacity 0.1s' }}>
-            <button 
-              onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
-              className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-[#e62429] to-[#ff4444] hover:from-[#ff4444] hover:to-[#e62429] text-white rounded-full backdrop-blur-md border border-red-300/30 transition-all cursor-pointer shadow-[0_0_30px_rgba(230,36,41,0.5)] uppercase tracking-widest text-xs font-bold"
-              style={{ fontFamily: 'var(--font-space-grotesk)' }}
+        {!isOpen && (
+          <Html center transform sprite zIndexRange={[100, 0]} scale={htmlScale}>
+            <div ref={triggerRef} style={{ transition: 'opacity 0.1s' }}>
+              <button
+                onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
+                className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-[#e62429] to-[#ff4444] hover:from-[#ff4444] hover:to-[#e62429] text-white rounded-full backdrop-blur-md border border-red-300/30 transition-all cursor-pointer shadow-[0_0_30px_rgba(230,36,41,0.5)] uppercase tracking-widest text-xs font-bold"
+                style={{ fontFamily: 'var(--font-space-grotesk)' }}
+              >
+                <span>{title}</span>
+                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+              </button>
+            </div>
+          </Html>
+        )}
+
+        {/* 3D HTML Card */}
+        {isOpen && (
+          <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
+            <div
+              ref={cardRef}
+              className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]"
+              style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}
+              onClick={(e) => e.stopPropagation()}
             >
-              <span>{title}</span>
-              <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
-            </button>
-          </div>
-        </Html>
-      )}
-      
-      {/* 3D HTML Card */}
-      {isOpen && (
-        <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
-          <div 
-            ref={cardRef}
-            className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]"
-            style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}
-            onClick={(e) => e.stopPropagation()}
-          >
-            <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
-              <h3 className="text-xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
-              <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 bg-white/5 rounded-full hover:bg-white/10">✕</button>
+              <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
+                <h3 className="text-xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
+                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 bg-white/5 rounded-full hover:bg-white/10">✕</button>
+              </div>
+              <div className="text-sm font-light leading-relaxed text-white/80">
+                {children}
+              </div>
             </div>
-            <div className="text-sm font-light leading-relaxed text-white/80">
-              {children}
-            </div>
-          </div>
-        </Html>
-      )}
+          </Html>
+        )}
       </Float>
     </group>
   );
@@ -96,11 +97,11 @@ function useFade(
   restoreDepthWrite: boolean,
 ) {
   const lastOpacity = useRef(-1);
-  const wasVisible  = useRef(false);
+  const wasVisible = useRef(false);
 
   useFrame(() => {
     if (!groupRef.current) return;
-    const gp      = scrollStore.globalProgress;
+    const gp = scrollStore.globalProgress;
     const opacity = phaseOpacity(phaseIndex, gp, 0.06);
 
     const nowVisible = opacity > 0.001;
@@ -108,8 +109,8 @@ function useFade(
       wasVisible.current !== nowVisible ||
       (nowVisible && Math.abs(opacity - lastOpacity.current) > 0.002)
     ) {
-      lastOpacity.current  = opacity;
-      wasVisible.current   = nowVisible;
+      lastOpacity.current = opacity;
+      wasVisible.current = nowVisible;
       groupRef.current.visible = nowVisible;
 
       for (const m of matsRef.current) {
@@ -130,13 +131,13 @@ function useFade(
 function SpiderManModel() {
   const { scene } = useGLTF('/models/spider-man_symbiote.glb', false);
   const wrapperRef = useRef<THREE.Group>(null);
-  const modelRef   = useRef<THREE.Group>(null);
-  const spinY      = useRef(0);
+  const modelRef = useRef<THREE.Group>(null);
+  const spinY = useRef(0);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
-    const box   = new THREE.Box3().setFromObject(scene);
-    const size  = box.getSize(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const scale = 1.9 / size.y;
     scene.scale.setScalar(scale);
@@ -151,7 +152,7 @@ function SpiderManModel() {
       const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of ms as THREE.MeshStandardMaterial[]) {
         m.transparent = true;
-        m.depthWrite  = true;
+        m.depthWrite = true;
         if (m.emissive !== undefined) {
           m.emissive.copy(emissiveColor);
           m.emissiveIntensity = 0.15;
@@ -192,15 +193,15 @@ function SpiderManModel() {
 // ── Phase 1: Battle Bus ──────────────────────────────────────────────────────
 function BattleBusModel() {
   const { scene } = useGLTF('/models/battle-bus.glb', true);
-  const wrapperRef  = useRef<THREE.Group>(null);
-  const modelRef    = useRef<THREE.Group>(null);
-  const dropTimer   = useRef(0);
+  const wrapperRef = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
+  const dropTimer = useRef(0);
   const hoverOffset = useRef('Bus'.length * 0.731);
-  const cachedMats  = useRef<THREE.Material[]>([]);
+  const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
-    const box   = new THREE.Box3().setFromObject(scene);
-    const size  = box.getSize(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const scale = 6 / size.y;
     scene.scale.setScalar(scale);
@@ -215,7 +216,7 @@ function BattleBusModel() {
       const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of ms as THREE.MeshStandardMaterial[]) {
         m.transparent = true;
-        m.depthWrite  = true;
+        m.depthWrite = true;
         if (m.emissive !== undefined) {
           m.emissive.copy(emissiveColor);
           m.emissiveIntensity = 0.08;
@@ -250,15 +251,9 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3.5, 3, 0]} title="SKILLS" phaseIndex={1} htmlScale={1.2}>
+      <InfoHotspot position={[3.5, 3, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.7}>
         <div className="flex flex-col gap-4">
-          <p>My technical toolkit spans across languages and domains.</p>
-          <ul className="flex flex-col gap-2">
-            <li><strong className="text-white">Languages:</strong> Python, TypeScript, Java, C++, SQL</li>
-            <li><strong className="text-white">Frameworks:</strong> React, Spring Boot, FastAPI, LangChain</li>
-            <li><strong className="text-white">Databases:</strong> PostgreSQL, MongoDB, Redis, Pinecone</li>
-            <li><strong className="text-white">Tools:</strong> AWS, Docker, Node.js, PyTorch</li>
-          </ul>
+          <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
         </div>
       </InfoHotspot>
     </group>
@@ -269,12 +264,12 @@ function BattleBusModel() {
 function RaceTrackModel() {
   const { scene } = useGLTF('/models/drift_race_track_free.glb', false);
   const wrapperRef = useRef<THREE.Group>(null);
-  const modelRef   = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
-    const box   = new THREE.Box3().setFromObject(scene);
-    const size  = box.getSize(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const scale = 12 / size.y;
     scene.scale.setScalar(scale);
@@ -289,7 +284,7 @@ function RaceTrackModel() {
       const ms = Array.isArray(mesh.material) ? mesh.material : [mesh.material];
       for (const m of ms as THREE.MeshStandardMaterial[]) {
         m.transparent = true;
-        m.depthWrite  = true;
+        m.depthWrite = true;
         if (m.emissive !== undefined) {
           m.emissive.copy(emissiveColor);
           m.emissiveIntensity = 0.06;
@@ -315,9 +310,9 @@ function RaceTrackModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      
+
       {/* SBU Experience */}
-      <InfoHotspot position={[-4, 2, 2]} title="SBU Intern" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[-15, 2, 5]} title="SBU Intern" phaseIndex={2} htmlScale={2.5}>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <img src="/images/sbu.png" alt="SBU" className="w-12 h-12 rounded bg-white p-1" />
@@ -332,7 +327,7 @@ function RaceTrackModel() {
       </InfoHotspot>
 
       {/* WEX Experience */}
-      <InfoHotspot position={[4, 2, -2]} title="WEX Engineer" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[15, 2, 5]} title="WEX Engineer" phaseIndex={2} htmlScale={2.5}>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <img src="/images/wex.png" alt="WEX" className="w-12 h-12 rounded bg-white p-1" />
@@ -347,7 +342,7 @@ function RaceTrackModel() {
       </InfoHotspot>
 
       {/* Atlas Legacy */}
-      <InfoHotspot position={[0, 3, 5]} title="Atlas Legacy" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[-8, 3, -12]} title="Atlas Legacy" phaseIndex={2} htmlScale={2.5}>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded bg-blue-600 flex items-center justify-center font-bold text-xl">A</div>
@@ -360,6 +355,13 @@ function RaceTrackModel() {
           <p className="text-xs opacity-80">Built containerized AWS ECS deployment with GitHub Actions CI/CD pipelines, cutting release cycle time by 40%.</p>
         </div>
       </InfoHotspot>
+
+      {/* Future Endeavors */}
+      <InfoHotspot position={[8, 3, -12]} title="Future Endeavors" phaseIndex={2} htmlScale={2.5}>
+        <div className="flex flex-col gap-4">
+          <p className="text-sm opacity-90 leading-relaxed">I am eager to tackle new technical challenges while continuing to grow as a collaborative and reliable teammate. My goal is to build secure, effective technology while maintaining the curiosity and positive energy that keeps the work engaging for everyone involved.</p>
+        </div>
+      </InfoHotspot>
     </group>
   );
 }
@@ -368,12 +370,12 @@ function RaceTrackModel() {
 function HangarModel() {
   const { scene } = useGLTF('/models/star-destroyer-hangar.glb', true);
   const wrapperRef = useRef<THREE.Group>(null);
-  const modelRef   = useRef<THREE.Group>(null);
+  const modelRef = useRef<THREE.Group>(null);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
-    const box   = new THREE.Box3().setFromObject(scene);
-    const size  = box.getSize(new THREE.Vector3());
+    const box = new THREE.Box3().setFromObject(scene);
+    const size = box.getSize(new THREE.Vector3());
     const center = box.getCenter(new THREE.Vector3());
     const scale = 22 / size.y;
 
@@ -394,11 +396,11 @@ function HangarModel() {
           anyMat.map ?? anyMat.emissiveMap ?? anyMat.lightMap ?? anyMat.aoMap ?? null;
 
         const basicMat = new THREE.MeshBasicMaterial({
-          map:  tex,
+          map: tex,
           side: anyMat.side ?? THREE.FrontSide,
           transparent: true,
-          opacity:     1,
-          depthWrite:  false,  // restored by useFade when fully opaque
+          opacity: 1,
+          depthWrite: false,  // restored by useFade when fully opaque
         });
 
         newMats.push(basicMat);
@@ -424,7 +426,7 @@ function HangarModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[0, 4, 0]} title="CONTACT" phaseIndex={6} htmlScale={4}>
+      <InfoHotspot position={[3, 3.5, -6]} title="CONTACT?" phaseIndex={6} htmlScale={1}>
         <div className="flex flex-col gap-4">
           <p>This is where the journey ends… and the next one begins. Reach out to me anytime.</p>
           <p className="font-bold">Email: sridharatragada@gmail.com</p>
@@ -463,8 +465,8 @@ function SkyboxSphere({
     [],
   );
 
-  const matRef    = useRef<THREE.MeshBasicMaterial>(null);
-  const groupRef  = useRef<THREE.Group>(null);
+  const matRef = useRef<THREE.MeshBasicMaterial>(null);
+  const groupRef = useRef<THREE.Group>(null);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
@@ -510,19 +512,27 @@ export default function CharacterStage() {
         position={[0, 0, 0]}
       >
         {/* Phase 3 - Projects */}
-        <InfoHotspot position={[-2, 0, 4]} title="CHRONICLE RPG" phaseIndex={3}>
+        <InfoHotspot position={[4, 0, 4]} title="CHRONICLE RPG" phaseIndex={3} htmlScale={0.7}>
           <div className="flex flex-col gap-4">
             <p className="text-xs opacity-70">React, Python, Zustand, ChromaDB</p>
             <p className="text-xs opacity-80 mt-1">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
-            <a href="https://github.com/sriaratragada" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
           </div>
         </InfoHotspot>
 
-        <InfoHotspot position={[2, 0, 4]} title="FORMFLOW AI" phaseIndex={3}>
+        <InfoHotspot position={[4, 0, 0]} title="FORMFLOW AI" phaseIndex={3} htmlScale={0.7}>
           <div className="flex flex-col gap-4">
             <p className="text-xs opacity-70">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
             <p className="text-xs opacity-80 mt-1">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam.</p>
-            <a href="https://github.com/sriaratragada" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+          </div>
+        </InfoHotspot>
+
+        <InfoHotspot position={[4, 0, -4]} title="HF ORDER MATCHING" phaseIndex={3} htmlScale={0.7}>
+          <div className="flex flex-col gap-4">
+            <p className="text-xs opacity-70">C++, CMake, GoogleTest</p>
+            <p className="text-xs opacity-80 mt-1">Engineered a low-latency matching engine in C++ implementing a Price-Time Priority (FIFO) algorithm and a Pro-Rata allocation model utilizing a largest-remainder split to execute limit and market orders with deterministic sub-microsecond performance.</p>
+            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
           </div>
         </InfoHotspot>
       </SkyboxSphere>
@@ -544,11 +554,7 @@ export default function CharacterStage() {
         texturePath="/textures/forest_panorama.jpg"
         position={[2000, 0, 0]}
       >
-        <InfoHotspot position={[0, 0, 5]} title="ENCHANTED FOREST" phaseIndex={5}>
-          <div className="flex flex-col gap-2">
-            <p>Ancient trees tower overhead as the camera drifts through a glowing enchanted forest.</p>
-          </div>
-        </InfoHotspot>
+        <FireflyGame phaseIndex={5} />
       </SkyboxSphere>
     </>
   );

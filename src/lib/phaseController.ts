@@ -112,7 +112,7 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     camera: {
       type: 'photosphere',
       centre: [0, 0.5, 0],
-      fov: 72,
+      fov: 100,
       fogDensity: 0.00008,
     },
   },
@@ -122,7 +122,7 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     camera: {
       type: 'photosphere',
       centre: [1000, 0.5, 0],
-      fov: 76,
+      fov: 100,
       fogDensity: 0.00008,
     },
   },
@@ -132,7 +132,7 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     camera: {
       type: 'photosphere',
       centre: [2000, 0.5, 0],
-      fov: 70,
+      fov: 100,
       fogDensity: 0.00012,
     },
   },

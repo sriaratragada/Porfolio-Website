@@ -50,12 +50,13 @@ export function phaseOpacity(phaseIndex: number, globalProgress: number, fadeSiz
   const phase = PHASES[phaseIndex];
   const gp = globalProgress;
 
-  if (gp <= phase.start || gp >= phase.end) return 0;
+  const isFinalPhase = phaseIndex === PHASES.length - 1;
+
+  if (gp <= phase.start || (!isFinalPhase && gp >= phase.end)) return 0;
 
   const fadeIn  = (gp - phase.start) / fadeSize;
   
   // The final phase should stay fully visible at the very end of the scroll, instead of fading to black.
-  const isFinalPhase = phaseIndex === PHASES.length - 1;
   const fadeOut = isFinalPhase ? 1 : (phase.end - gp) / fadeSize;
   
   const t = Math.min(1, Math.min(fadeIn, fadeOut));
