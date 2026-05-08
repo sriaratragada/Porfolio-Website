@@ -6,7 +6,7 @@
 
 import { useRef, useEffect, useMemo, useState } from 'react';
 import { useFrame, useLoader } from '@react-three/fiber';
-import { useGLTF, Html } from '@react-three/drei';
+import { useGLTF, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 
@@ -14,36 +14,46 @@ function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-// ── Info Hotspot ─────────────────────────────────────────────────────────────
-function InfoHotspot({ position, title, children, rotation, phaseIndex }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number }) {
+function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScale = 1 }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number, htmlScale?: number }) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
+  // Track opacity in state so we can fully unmount the Html component when it's totally hidden
+  const [opacity, setOpacity] = useState(0);
 
   useFrame(() => {
     const gp = scrollStore.globalProgress;
-    const opacity = phaseOpacity(phaseIndex, gp, 0.06);
-    const pEvents = opacity > 0.1 ? 'auto' : 'none';
+    // fadeSize=0.02 means it fades in completely within the first 2% of the phase, appearing very early!
+    const newOpacity = phaseOpacity(phaseIndex, gp, 0.02);
     
+    // Only update state if it crossed the 0 threshold to avoid excessive re-renders
+    if ((newOpacity > 0 && opacity === 0) || (newOpacity === 0 && opacity > 0)) {
+      setOpacity(newOpacity);
+    }
+    
+    const pEvents = newOpacity > 0.1 ? 'auto' : 'none';
     if (triggerRef.current) {
-      triggerRef.current.style.opacity = opacity.toString();
+      triggerRef.current.style.opacity = newOpacity.toString();
       triggerRef.current.style.pointerEvents = pEvents;
     }
     if (cardRef.current) {
-      cardRef.current.style.opacity = opacity.toString();
+      cardRef.current.style.opacity = newOpacity.toString();
       cardRef.current.style.pointerEvents = pEvents;
     }
   });
 
+  if (opacity === 0) return null; // Completely remove from DOM when hidden!
+
   return (
     <group position={position} rotation={rotation || [0, 0, 0]}>
-      {/* Interactive Trigger */}
+      <Float floatIntensity={1.5} speed={2.5} rotationIntensity={0.1}>
+        {/* Interactive Trigger */}
       {!isOpen && (
-        <Html center zIndexRange={[100, 0]}>
+        <Html center transform sprite zIndexRange={[100, 0]} scale={htmlScale}>
           <div ref={triggerRef} style={{ transition: 'opacity 0.1s' }}>
             <button 
               onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
-              className="flex items-center gap-2 px-4 py-2 bg-[#e62429]/90 hover:bg-[#e62429] text-white rounded-full backdrop-blur-md border border-red-400/50 transition-all cursor-pointer shadow-[0_0_20px_rgba(230,36,41,0.6)] animate-pulse uppercase tracking-widest text-sm font-bold"
+              className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-[#e62429] to-[#ff4444] hover:from-[#ff4444] hover:to-[#e62429] text-white rounded-full backdrop-blur-md border border-red-300/30 transition-all cursor-pointer shadow-[0_0_30px_rgba(230,36,41,0.5)] uppercase tracking-widest text-xs font-bold"
               style={{ fontFamily: 'var(--font-space-grotesk)' }}
             >
               <span>{title}</span>
@@ -55,23 +65,24 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex }: { posi
       
       {/* 3D HTML Card */}
       {isOpen && (
-        <Html center transform position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]}>
+        <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
           <div 
             ref={cardRef}
-            className="flex flex-col bg-black/70 backdrop-blur-xl border border-white/20 rounded-2xl p-5 text-white shadow-[0_8px_32px_rgba(0,0,0,0.6)]"
-            style={{ width: '340px', fontFamily: 'var(--font-space-grotesk)' }}
+            className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]"
+            style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}
             onClick={(e) => e.stopPropagation()}
           >
-            <div className="flex items-center justify-between mb-4 border-b border-white/10 pb-2">
-              <h3 className="text-xl font-bold uppercase" style={{ fontFamily: 'var(--font-space-grotesk)', letterSpacing: '0.05em' }}>{title}</h3>
-              <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/50 hover:text-white transition-colors cursor-pointer p-1">✕</button>
+            <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
+              <h3 className="text-xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
+              <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 bg-white/5 rounded-full hover:bg-white/10">✕</button>
             </div>
-            <div className="text-sm font-light leading-relaxed text-white/90">
+            <div className="text-sm font-light leading-relaxed text-white/80">
               {children}
             </div>
           </div>
         </Html>
       )}
+      </Float>
     </group>
   );
 }
@@ -239,7 +250,7 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3.5, 3, 0]} title="SKILLS" phaseIndex={1}>
+      <InfoHotspot position={[3.5, 3, 0]} title="SKILLS" phaseIndex={1} htmlScale={1.2}>
         <div className="flex flex-col gap-4">
           <p>My technical toolkit spans across languages and domains.</p>
           <ul className="flex flex-col gap-2">
@@ -306,7 +317,7 @@ function RaceTrackModel() {
       </group>
       
       {/* SBU Experience */}
-      <InfoHotspot position={[-4, 2, 2]} title="SBU Intern" phaseIndex={2}>
+      <InfoHotspot position={[-4, 2, 2]} title="SBU Intern" phaseIndex={2} htmlScale={2.5}>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <img src="/images/sbu.png" alt="SBU" className="w-12 h-12 rounded bg-white p-1" />
@@ -321,7 +332,7 @@ function RaceTrackModel() {
       </InfoHotspot>
 
       {/* WEX Experience */}
-      <InfoHotspot position={[4, 2, -2]} title="WEX Engineer" phaseIndex={2}>
+      <InfoHotspot position={[4, 2, -2]} title="WEX Engineer" phaseIndex={2} htmlScale={2.5}>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <img src="/images/wex.png" alt="WEX" className="w-12 h-12 rounded bg-white p-1" />
@@ -336,7 +347,7 @@ function RaceTrackModel() {
       </InfoHotspot>
 
       {/* Atlas Legacy */}
-      <InfoHotspot position={[0, 3, 5]} title="Atlas Legacy" phaseIndex={2}>
+      <InfoHotspot position={[0, 3, 5]} title="Atlas Legacy" phaseIndex={2} htmlScale={2.5}>
         <div className="flex flex-col gap-4">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded bg-blue-600 flex items-center justify-center font-bold text-xl">A</div>
@@ -413,7 +424,7 @@ function HangarModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[0, 5, 10]} title="CONTACT" phaseIndex={6}>
+      <InfoHotspot position={[0, 4, 0]} title="CONTACT" phaseIndex={6} htmlScale={4}>
         <div className="flex flex-col gap-4">
           <p>This is where the journey ends… and the next one begins. Reach out to me anytime.</p>
           <p className="font-bold">Email: sridharatragada@gmail.com</p>
@@ -499,19 +510,19 @@ export default function CharacterStage() {
         position={[0, 0, 0]}
       >
         {/* Phase 3 - Projects */}
-        <InfoHotspot position={[0, 0, -5]} title="PROJECTS" phaseIndex={3}>
+        <InfoHotspot position={[-2, 0, 4]} title="CHRONICLE RPG" phaseIndex={3}>
           <div className="flex flex-col gap-4">
-            <div>
-              <p className="font-bold text-white">Chronicle RPG Engine</p>
-              <p className="text-xs opacity-70">React, Python, Zustand, ChromaDB</p>
-              <p className="text-xs opacity-80 mt-1">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
-            </div>
-            <div className="h-px bg-white/10" />
-            <div>
-              <p className="font-bold text-white">FormFlow</p>
-              <p className="text-xs opacity-70">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
-              <p className="text-xs opacity-80 mt-1">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam.</p>
-            </div>
+            <p className="text-xs opacity-70">React, Python, Zustand, ChromaDB</p>
+            <p className="text-xs opacity-80 mt-1">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
+            <a href="https://github.com/sriaratragada" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+          </div>
+        </InfoHotspot>
+
+        <InfoHotspot position={[2, 0, 4]} title="FORMFLOW AI" phaseIndex={3}>
+          <div className="flex flex-col gap-4">
+            <p className="text-xs opacity-70">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
+            <p className="text-xs opacity-80 mt-1">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam.</p>
+            <a href="https://github.com/sriaratragada" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
           </div>
         </InfoHotspot>
       </SkyboxSphere>
@@ -521,7 +532,7 @@ export default function CharacterStage() {
         texturePath="/textures/clouds_panorama.jpg"
         position={[1000, 0, 0]}
       >
-        <InfoHotspot position={[5, 0, -5]} title="ABOVE THE CLOUDS" phaseIndex={4}>
+        <InfoHotspot position={[0, 0, 5]} title="ABOVE THE CLOUDS" phaseIndex={4}>
           <div className="flex flex-col gap-2">
             <p>Breaking through the cloud line, snowy peaks stretch to the horizon in every direction.</p>
           </div>
@@ -533,7 +544,7 @@ export default function CharacterStage() {
         texturePath="/textures/forest_panorama.jpg"
         position={[2000, 0, 0]}
       >
-        <InfoHotspot position={[-5, 0, -5]} title="ENCHANTED FOREST" phaseIndex={5}>
+        <InfoHotspot position={[0, 0, 5]} title="ENCHANTED FOREST" phaseIndex={5}>
           <div className="flex flex-col gap-2">
             <p>Ancient trees tower overhead as the camera drifts through a glowing enchanted forest.</p>
           </div>
