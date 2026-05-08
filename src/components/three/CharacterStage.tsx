@@ -130,6 +130,7 @@ function useFade(
 // ── Phase 0: Spider-Man ──────────────────────────────────────────────────────
 function SpiderManModel() {
   const { scene } = useGLTF('/models/spider-man_symbiote.glb', false);
+  const { viewport } = useThree();
   const wrapperRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
   const spinY = useRef(0);
@@ -166,21 +167,30 @@ function SpiderManModel() {
 
   useFade(wrapperRef, 0, cachedMats, true);
 
-  useFrame((_, delta) => {
+  useFrame((state, delta) => {
     if (!wrapperRef.current?.visible) return;
-    const gp = scrollStore.globalProgress;
-    const pp = phaseProgress(0, gp);
-    modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
-    spinY.current += delta * 0.25;
-    modelRef.current!.rotation.y = spinY.current;
+    
+    // Dynamic top-right anchoring based on viewport
+    if (modelRef.current) {
+      const margin = 1.5;
+      const targetX = viewport.width / 2 - margin;
+      const targetY = viewport.height / 2 - margin;
+      
+      // Gentle hover and spin
+      modelRef.current.position.x = THREE.MathUtils.lerp(modelRef.current.position.x, targetX, 0.1);
+      modelRef.current.position.y = THREE.MathUtils.lerp(modelRef.current.position.y, targetY + Math.sin(state.clock.elapsedTime) * 0.2, 0.1);
+      
+      spinY.current += delta * 0.25;
+      modelRef.current.rotation.y = spinY.current;
+    }
   });
 
   return (
-    <group ref={wrapperRef} position={[-1, 0, 0]} visible={false}>
-      <group ref={modelRef} position={[6, 4, 0]}>
+    <group ref={wrapperRef} position={[0, 0, 0]} visible={false}>
+      <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[2, 1.5, 0]} title="Sri Atragada" phaseIndex={0}>
+      <InfoHotspot position={[0, 1.5, 0]} title="Sri Atragada" phaseIndex={0}>
         <div className="flex flex-col gap-4">
           <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-40 object-cover rounded-lg border border-white/10" />
           <p>I am a Computer Science student at Stony Brook University with a minor in Finance. I build full-stack applications, scalable backend systems, and AI-driven platforms.</p>
@@ -251,7 +261,7 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3.5, 3, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.35}>
+      <InfoHotspot position={[3.5, 3, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.15}>
         <div className="flex flex-col gap-4">
           <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
         </div>
