@@ -67,17 +67,17 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
         {/* 3D HTML Card */}
         {isOpen && (
           <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
-            <div
+            <div 
               ref={cardRef}
-              className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]"
-              style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}
+              className="flex flex-col bg-black/60 backdrop-blur-2xl border-2 border-white/10 rounded-[2rem] p-12 text-white shadow-[0_32px_80px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.2)]"
+              style={{ width: '760px', fontFamily: 'var(--font-space-grotesk)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
-                <h3 className="text-xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
-                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 bg-white/5 rounded-full hover:bg-white/10">✕</button>
+              <div className="flex items-center justify-between mb-10 border-b-2 border-white/10 pb-6">
+                <h3 className="text-4xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
+                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-2 bg-white/5 rounded-full hover:bg-white/10 text-2xl">✕</button>
               </div>
-              <div className="text-sm font-light leading-relaxed text-white/80">
+              <div className="text-2xl font-light leading-relaxed text-white/80">
                 {children}
               </div>
             </div>
@@ -177,12 +177,12 @@ function SpiderManModel() {
 
   return (
     <group ref={wrapperRef} position={[-1, 0, 0]} visible={false}>
-      <group ref={modelRef}>
+      <group ref={modelRef} position={[4, 2.5, 0]}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[2, 1.5, 0]} title="Sri Atragada" phaseIndex={0}>
-        <div className="flex flex-col gap-4">
-          <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-40 object-cover rounded-lg border border-white/10" />
+      <InfoHotspot position={[2, 1.5, 0]} title="Sri Atragada" phaseIndex={0} htmlScale={1}>
+        <div className="flex flex-col gap-8">
+          <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-80 object-cover rounded-[2rem] border-2 border-white/10" />
           <p>I am a Computer Science student at Stony Brook University with a minor in Finance. I build full-stack applications, scalable backend systems, and AI-driven platforms.</p>
         </div>
       </InfoHotspot>
@@ -251,7 +251,7 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3.5, 3, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.7}>
+      <InfoHotspot position={[3.5, 3, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.35}>
         <div className="flex flex-col gap-4">
           <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
         </div>
@@ -312,54 +312,54 @@ function RaceTrackModel() {
       </group>
 
       {/* SBU Experience */}
-      <InfoHotspot position={[-15, 2, 5]} title="SBU Intern" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[-8, 2, 5]} title="SBU Intern" phaseIndex={2} htmlScale={1.5}>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <img src="/images/sbu.png" alt="SBU" className="w-12 h-12 rounded bg-white p-1" />
+          <div className="flex items-center gap-6">
+            <img src="/images/sbu.png" alt="SBU" className="w-24 h-24 rounded-[1.5rem] bg-white p-2" />
             <div>
               <p className="font-bold text-white">Stony Brook University</p>
-              <p className="text-xs opacity-70">Software Engineer Intern</p>
+              <p className="text-xl opacity-70">Software Engineer Intern</p>
             </div>
           </div>
-          <p className="text-xs">Sep 2025 – Feb 2026</p>
-          <p className="text-xs opacity-80">Designed and shipped a Python NLP service that converts natural-language library queries into Boolean search expressions.</p>
+          <p className="text-xl">Sep 2025 – Feb 2026</p>
+          <p className="text-xl opacity-80">Designed and shipped a Python NLP service that converts natural-language library queries into Boolean search expressions.</p>
         </div>
       </InfoHotspot>
 
       {/* WEX Experience */}
-      <InfoHotspot position={[15, 2, 5]} title="WEX Engineer" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[8, 2, 5]} title="WEX Engineer" phaseIndex={2} htmlScale={1.5}>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <img src="/images/wex.png" alt="WEX" className="w-12 h-12 rounded bg-white p-1" />
+          <div className="flex items-center gap-6">
+            <img src="/images/wex.png" alt="WEX" className="w-24 h-24 rounded-[1.5rem] bg-white p-2" />
             <div>
               <p className="font-bold text-white">WEX</p>
-              <p className="text-xs opacity-70">Incoming Security Engineer</p>
+              <p className="text-xl opacity-70">Incoming Security Engineer</p>
             </div>
           </div>
-          <p className="text-xs">May 2026</p>
-          <p className="text-xs opacity-80">Incoming Security Engineer driving impact across application security and DevSecOps.</p>
+          <p className="text-xl">May 2026</p>
+          <p className="text-xl opacity-80">Incoming Security Engineer driving impact across application security and DevSecOps.</p>
         </div>
       </InfoHotspot>
 
       {/* Atlas Legacy */}
-      <InfoHotspot position={[-8, 3, -12]} title="Atlas Legacy" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[-5, 3, -12]} title="Atlas Legacy" phaseIndex={2} htmlScale={1.5}>
         <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-4">
-            <div className="w-12 h-12 rounded bg-blue-600 flex items-center justify-center font-bold text-xl">A</div>
+          <div className="flex items-center gap-6">
+            <div className="w-24 h-24 rounded-[1.5rem] bg-blue-600 flex items-center justify-center font-bold text-4xl">A</div>
             <div>
               <p className="font-bold text-white">Atlas Legacy Inc.</p>
-              <p className="text-xs opacity-70">Software Engineer Intern</p>
+              <p className="text-xl opacity-70">Software Engineer Intern</p>
             </div>
           </div>
-          <p className="text-xs">May 2025 – Aug 2025</p>
-          <p className="text-xs opacity-80">Built containerized AWS ECS deployment with GitHub Actions CI/CD pipelines, cutting release cycle time by 40%.</p>
+          <p className="text-xl">May 2025 – Aug 2025</p>
+          <p className="text-xl opacity-80">Built containerized AWS ECS deployment with GitHub Actions CI/CD pipelines, cutting release cycle time by 40%.</p>
         </div>
       </InfoHotspot>
 
       {/* Future Endeavors */}
-      <InfoHotspot position={[8, 3, -12]} title="Future Endeavors" phaseIndex={2} htmlScale={2.5}>
+      <InfoHotspot position={[5, 3, -12]} title="Future Endeavors" phaseIndex={2} htmlScale={1.5}>
         <div className="flex flex-col gap-4">
-          <p className="text-sm opacity-90 leading-relaxed">I am eager to tackle new technical challenges while continuing to grow as a collaborative and reliable teammate. My goal is to build secure, effective technology while maintaining the curiosity and positive energy that keeps the work engaging for everyone involved.</p>
+          <p className="text-2xl opacity-90 leading-relaxed">I am eager to tackle new technical challenges while continuing to grow as a collaborative and reliable teammate. My goal is to build secure, effective technology while maintaining the curiosity and positive energy that keeps the work engaging for everyone involved.</p>
         </div>
       </InfoHotspot>
     </group>
@@ -426,11 +426,11 @@ function HangarModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3, 3.5, -6]} title="CONTACT?" phaseIndex={6} htmlScale={1}>
-        <div className="flex flex-col gap-4">
-          <p>This is where the journey ends… and the next one begins. Reach out to me anytime.</p>
-          <p className="font-bold">Email: sridharatragada@gmail.com</p>
-          <p className="font-bold">Phone: (207) 303-5293</p>
+      <InfoHotspot position={[3, 3.5, -6]} title="CONTACT?" phaseIndex={6} htmlScale={0.5}>
+        <div className="flex flex-col gap-6">
+          <p className="text-2xl">This is where the journey ends… and the next one begins. Reach out to me anytime.</p>
+          <p className="font-bold text-2xl">Email: sridharatragada@gmail.com</p>
+          <p className="font-bold text-2xl">Phone: (207) 303-5293</p>
         </div>
       </InfoHotspot>
     </group>
@@ -512,27 +512,27 @@ export default function CharacterStage() {
         position={[0, 0, 0]}
       >
         {/* Phase 3 - Projects */}
-        <InfoHotspot position={[4, 0, 4]} title="CHRONICLE RPG" phaseIndex={3} htmlScale={0.7}>
+        <InfoHotspot position={[4, 0, 4]} title="CHRONICLE RPG" phaseIndex={3} htmlScale={0.35}>
           <div className="flex flex-col gap-4">
-            <p className="text-xs opacity-70">React, Python, Zustand, ChromaDB</p>
-            <p className="text-xs opacity-80 mt-1">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
-            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+            <p className="text-xl opacity-70 text-blue-300 font-bold tracking-wider">React, Python, Zustand, ChromaDB</p>
+            <p className="text-xl opacity-80 mt-1 leading-relaxed">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
+            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" className="mt-2 text-xl text-[#e62429] hover:text-white flex items-center gap-2 font-bold transition-colors">VIEW REPOSITORY ➔</a>
           </div>
         </InfoHotspot>
 
-        <InfoHotspot position={[4, 0, 0]} title="FORMFLOW AI" phaseIndex={3} htmlScale={0.7}>
+        <InfoHotspot position={[4, 0, 0]} title="FORMFLOW AI" phaseIndex={3} htmlScale={0.35}>
           <div className="flex flex-col gap-4">
-            <p className="text-xs opacity-70">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
-            <p className="text-xs opacity-80 mt-1">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam.</p>
-            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+            <p className="text-xl opacity-70 text-green-300 font-bold tracking-wider">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
+            <p className="text-xl opacity-80 mt-1 leading-relaxed">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam. Won 2nd Place at Code-A-Site Hackathon.</p>
+            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" className="mt-2 text-xl text-[#e62429] hover:text-white flex items-center gap-2 font-bold transition-colors">VIEW REPOSITORY ➔</a>
           </div>
         </InfoHotspot>
 
-        <InfoHotspot position={[4, 0, -4]} title="HF ORDER MATCHING" phaseIndex={3} htmlScale={0.7}>
+        <InfoHotspot position={[4, 0, -4]} title="HF ORDER MATCHING" phaseIndex={3} htmlScale={0.35}>
           <div className="flex flex-col gap-4">
-            <p className="text-xs opacity-70">C++, CMake, GoogleTest</p>
-            <p className="text-xs opacity-80 mt-1">Engineered a low-latency matching engine in C++ implementing a Price-Time Priority (FIFO) algorithm and a Pro-Rata allocation model utilizing a largest-remainder split to execute limit and market orders with deterministic sub-microsecond performance.</p>
-            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" className="mt-2 text-xs text-[#e62429] hover:text-white flex items-center gap-1 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+            <p className="text-xl opacity-70 text-red-300 font-bold tracking-wider">C++, CMake, GoogleTest</p>
+            <p className="text-xl opacity-80 mt-1 leading-relaxed">Engineered a low-latency matching engine in C++ implementing a Price-Time Priority (FIFO) algorithm and a Pro-Rata allocation model utilizing a largest-remainder split to execute limit and market orders with deterministic sub-microsecond performance.</p>
+            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" className="mt-2 text-xl text-[#e62429] hover:text-white flex items-center gap-2 font-bold transition-colors">VIEW REPOSITORY ➔</a>
           </div>
         </InfoHotspot>
       </SkyboxSphere>
