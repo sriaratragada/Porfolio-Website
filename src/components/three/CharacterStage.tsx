@@ -69,15 +69,15 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
           <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
             <div 
               ref={cardRef}
-              className="flex flex-col bg-black/60 backdrop-blur-2xl border-2 border-white/10 rounded-[2rem] p-12 text-white shadow-[0_32px_80px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.2)]"
-              style={{ width: '760px', fontFamily: 'var(--font-space-grotesk)' }}
+              className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]"
+              style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-10 border-b-2 border-white/10 pb-6">
-                <h3 className="text-4xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
-                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-2 bg-white/5 rounded-full hover:bg-white/10 text-2xl">✕</button>
+              <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
+                <h3 className="text-xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
+                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 bg-white/5 rounded-full hover:bg-white/10">✕</button>
               </div>
-              <div className="text-2xl font-light leading-relaxed text-white/80">
+              <div className="text-sm font-light leading-relaxed text-white/80">
                 {children}
               </div>
             </div>
@@ -177,12 +177,12 @@ function SpiderManModel() {
 
   return (
     <group ref={wrapperRef} position={[-1, 0, 0]} visible={false}>
-      <group ref={modelRef} position={[4, 2.5, 0]}>
+      <group ref={modelRef} position={[6, 4, 0]}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[2, 1.5, 0]} title="Sri Atragada" phaseIndex={0} htmlScale={1}>
-        <div className="flex flex-col gap-8">
-          <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-80 object-cover rounded-[2rem] border-2 border-white/10" />
+      <InfoHotspot position={[2, 1.5, 0]} title="Sri Atragada" phaseIndex={0}>
+        <div className="flex flex-col gap-4">
+          <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-40 object-cover rounded-lg border border-white/10" />
           <p>I am a Computer Science student at Stony Brook University with a minor in Finance. I build full-stack applications, scalable backend systems, and AI-driven platforms.</p>
         </div>
       </InfoHotspot>

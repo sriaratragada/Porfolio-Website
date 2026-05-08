@@ -63,11 +63,11 @@ function Firefly({ data, index, onCatch, isCaught, phaseIndex }: { data: any, in
       
       {/* The caught card */}
       {isCaught && (
-        <Html center transform sprite zIndexRange={[100, 0]} scale={0.225}>
-          <div className="flex flex-col bg-black/60 backdrop-blur-2xl border-2 border-white/10 rounded-[2rem] p-12 text-white shadow-[0_32px_80px_rgba(0,0,0,0.8),inset_0_2px_0_rgba(255,255,255,0.2)] cursor-default transition-all duration-500 ease-out animate-in fade-in zoom-in-90" style={{ width: '760px', fontFamily: 'var(--font-space-grotesk)' }}>
-            <h3 className="text-4xl font-bold uppercase tracking-widest mb-6" style={{ color: data.color, textShadow: `0 0 20px ${data.color}80` }}>{data.title}</h3>
-            <p className="text-2xl opacity-70 mb-8">{data.skills}</p>
-            <p className="text-2xl font-light leading-relaxed text-white/80">{data.desc}</p>
+        <Html center transform sprite zIndexRange={[100, 0]} scale={0.45}>
+          <div className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] cursor-default transition-all duration-500 ease-out animate-in fade-in zoom-in-90" style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}>
+            <h3 className="text-xl font-bold uppercase tracking-widest mb-3" style={{ color: data.color, textShadow: `0 0 20px ${data.color}80` }}>{data.title}</h3>
+            <p className="text-sm opacity-70 mb-4">{data.skills}</p>
+            <p className="text-sm font-light leading-relaxed text-white/80">{data.desc}</p>
           </div>
         </Html>
       )}
