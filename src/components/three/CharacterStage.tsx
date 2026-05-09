@@ -230,10 +230,8 @@ function BattleBusModel() {
   const { scene } = useGLTF('/models/battle-bus.glb', true);
   const wrapperRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
-  const hotspotOrbitRef = useRef<THREE.Group>(null);
   const dropTimer = useRef(0);
   const hoverOffset = useRef('Bus'.length * 0.731);
-  const hotspotOrbitAngle = useRef(Math.PI * 0.15);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
@@ -281,30 +279,18 @@ function BattleBusModel() {
     const dropY = THREE.MathUtils.lerp(20, 0, dropT);
     hoverOffset.current += delta * 0.8;
     modelRef.current!.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
-
-    hotspotOrbitAngle.current += delta * 0.75;
-    if (hotspotOrbitRef.current) {
-      const orbitRadius = 11.5;
-      hotspotOrbitRef.current.position.set(
-        Math.cos(hotspotOrbitAngle.current) * orbitRadius,
-        5 + Math.sin(hoverOffset.current * 1.4) * 0.45,
-        Math.sin(hotspotOrbitAngle.current) * orbitRadius,
-      );
-    }
   });
 
   return (
     <group ref={wrapperRef} position={[0, 0, 0]} visible={false}>
       <group ref={modelRef}>
         <primitive object={scene} />
-        <group ref={hotspotOrbitRef}>
-          <InfoHotspot position={[0, 0, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.8} triggerScale={4}>
-            <div className="flex flex-col gap-4">
-              <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
-            </div>
-          </InfoHotspot>
-        </group>
       </group>
+      <InfoHotspot position={[6, 4, 10]} title="WHO I AM" phaseIndex={1} htmlScale={0.8} triggerScale={4}>
+        <div className="flex flex-col gap-4">
+          <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
+        </div>
+      </InfoHotspot>
     </group>
   );
 }

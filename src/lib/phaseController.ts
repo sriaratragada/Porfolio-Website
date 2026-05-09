@@ -42,6 +42,17 @@ export interface OrbitParams {
   radiusEnd?: number;
 }
 
+export interface TrackingParams {
+  type: 'tracking';
+  startPos: [number, number, number];
+  endPos: [number, number, number];
+  lookAtStart: [number, number, number];
+  lookAtEnd: [number, number, number];
+  fov: number;
+  lerpSpeed: number;
+  fogDensity: number;
+}
+
 export interface PhotosphereParams {
   type: 'photosphere';
   centre: [number, number, number];
@@ -49,7 +60,7 @@ export interface PhotosphereParams {
   fogDensity: number;
 }
 
-export type CameraParams = CraneDiveParams | OrbitParams | PhotosphereParams;
+export type CameraParams = CraneDiveParams | OrbitParams | TrackingParams | PhotosphereParams;
 
 export interface PhaseConfig {
   id: string;
@@ -71,24 +82,18 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
       fogDensity: 0.018,
     },
   },
-  // Phase 1 — Battle Bus: keep the camera clearly outside the GLB while it drops in.
-  // The bus is scaled fairly large, so the orbit radius needs to stay well beyond its full envelope.
+  // Phase 1 — Battle Bus: dedicated exterior tracking shot.
   {
     id: 'battlebus',
     camera: {
-      type: 'orbit',
-      origin: [0, 0, 0],
-      radius: 60,
-      y: 14,
-      lookY: 6.5,
-      angleStart: Math.PI * 0.78,
-      angleEnd: -Math.PI * 0.22,
-      fov: 58,
+      type: 'tracking',
+      startPos: [-24, 18, 38],
+      endPos: [-16, 10, 24],
+      lookAtStart: [0, 11, 0],
+      lookAtEnd: [0, 4.5, 0],
+      fov: 50,
       lerpSpeed: 2.4,
       fogDensity: 0.002,
-      descendingY: true,
-      yStart: 22,
-      yEnd: 12,
     },
   },
   // Phase 2 — Race Track: 120° sweeping orbit, descending camera
