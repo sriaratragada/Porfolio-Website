@@ -1,9 +1,17 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+import { markPortfolioShouldRestore } from '@/lib/portfolioScrollMemory';
+
 export default function BackButton() {
+  const router = useRouter();
+
   return (
     <button 
-      onClick={() => window.history.back()} 
+      onClick={() => {
+        markPortfolioShouldRestore();
+        router.push('/');
+      }}
       className="text-white/70 hover:text-white flex items-center gap-2 transition-colors uppercase tracking-widest text-sm font-bold cursor-pointer" 
       style={{ fontFamily: 'var(--font-space-grotesk)' }}
     >

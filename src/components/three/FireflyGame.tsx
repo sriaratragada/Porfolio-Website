@@ -1,10 +1,12 @@
 'use client';
 
 import { useRef, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { useFrame } from '@react-three/fiber';
 import { Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
 import { scrollStore, phaseOpacity } from '@/lib/scrollStore';
+import { savePortfolioProgress } from '@/lib/portfolioScrollMemory';
 
 const FIREFLIES = [
   { id: 'python', color: '#3b82f6', title: 'PYTHON & AI/ML', skills: 'RAG, ChromaDB, OpenAI', desc: 'Built end-to-end NLP pipelines and vector-based semantic retrieval systems reducing zero-result queries by 35%.' },
@@ -78,6 +80,7 @@ function Firefly({ data, index, onCatch, isCaught, phaseIndex }: { data: any, in
 export function FireflyGame({ phaseIndex = 5 }: { phaseIndex?: number }) {
   const [caughtIds, setCaughtIds] = useState<Set<string>>(new Set());
   const [opacity, setOpacity] = useState(0);
+  const router = useRouter();
 
   useFrame(() => {
     const gp = scrollStore.globalProgress;
@@ -121,7 +124,11 @@ export function FireflyGame({ phaseIndex = 5 }: { phaseIndex?: number }) {
               <div 
                 className="flex flex-col items-center bg-black/80 backdrop-blur-3xl border border-white/20 rounded-3xl p-8 text-white shadow-[0_0_80px_rgba(255,255,255,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] cursor-pointer hover:scale-105 transition-all duration-700 ease-out animate-in zoom-in-50 spin-in-12" 
                 style={{ fontFamily: 'var(--font-space-grotesk)' }} 
-                onClick={(e) => { e.stopPropagation(); window.location.href = '/resume'; }}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  savePortfolioProgress(scrollStore.globalProgress);
+                  router.push('/resume');
+                }}
               >
                 <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(255,255,255,0.8)]" style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
                   <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>

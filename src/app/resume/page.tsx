@@ -8,7 +8,7 @@ export const metadata: Metadata = {
 
 export default function ResumePage() {
   return (
-    <div className="w-full h-screen bg-black flex flex-col items-center justify-center p-4">
+    <div className="pointer-events-auto w-full h-screen bg-black flex flex-col items-center justify-center p-4">
       {/* Back button */}
       <div className="absolute top-8 left-8">
         <BackButton />
