@@ -28,6 +28,8 @@ export interface OrbitParams {
   radius: number;
   y: number;
   lookY: number;
+  lookYStart?: number;
+  lookYEnd?: number;
   angleStart: number;
   angleEnd: number;
   fov: number;
@@ -42,17 +44,6 @@ export interface OrbitParams {
   radiusEnd?: number;
 }
 
-export interface TrackingParams {
-  type: 'tracking';
-  startPos: [number, number, number];
-  endPos: [number, number, number];
-  lookAtStart: [number, number, number];
-  lookAtEnd: [number, number, number];
-  fov: number;
-  lerpSpeed: number;
-  fogDensity: number;
-}
-
 export interface PhotosphereParams {
   type: 'photosphere';
   centre: [number, number, number];
@@ -60,7 +51,7 @@ export interface PhotosphereParams {
   fogDensity: number;
 }
 
-export type CameraParams = CraneDiveParams | OrbitParams | TrackingParams | PhotosphereParams;
+export type CameraParams = CraneDiveParams | OrbitParams | PhotosphereParams;
 
 export interface PhaseConfig {
   id: string;
@@ -82,18 +73,29 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
       fogDensity: 0.018,
     },
   },
-  // Phase 1 — Battle Bus: dedicated exterior tracking shot.
+  // Phase 1 — Battle Bus: orbit inside the GLB sky around the bus at scene centre.
   {
     id: 'battlebus',
     camera: {
-      type: 'tracking',
-      startPos: [-18, 16, 28],
-      endPos: [-12, 9, 18],
-      lookAtStart: [2, 9, 4],
-      lookAtEnd: [2, 4.5, 4],
-      fov: 44,
-      lerpSpeed: 2.4,
+      type: 'orbit',
+      // The bus itself sits near the scene middle; keep the orbit anchored close
+      // to that centre and stay much farther back so we clear the side walls.
+      origin: [0, 3.0, 0],
+      radius: 60,
+      radiusStart: 450,
+      radiusEnd:300,
+      y: 18,
+      yStart: 24,
+      yEnd: 15,
+      lookY: 4.0,
+      lookYStart: 10.5,
+      lookYEnd: 4.0,
+      angleStart: Math.PI * 0.78,
+      angleEnd: Math.PI * 0.08,
+      fov: 76,
+      lerpSpeed: 3.2,
       fogDensity: 0.002,
+      descendingY: true,
     },
   },
   // Phase 2 — Race Track: 120° sweeping orbit, descending camera

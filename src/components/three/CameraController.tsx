@@ -19,7 +19,6 @@ import {
   PHASE_CONFIGS,
   type CraneDiveParams,
   type OrbitParams,
-  type TrackingParams,
   type PhotosphereParams,
 } from '@/lib/phaseController';
 import { photoSphereStore } from '@/lib/photoSphereStore';
@@ -80,6 +79,14 @@ function applyOrbit(
     r = THREE.MathUtils.lerp(cfg.radiusStart, cfg.radiusEnd, eased);
   }
 
+  let lookY = cfg.lookY;
+  if (cfg.lookYStart !== undefined && cfg.lookYEnd !== undefined) {
+    const eased2 = progress < 0.5
+      ? 2 * progress * progress
+      : 1 - Math.pow(-2 * progress + 2, 2) / 2;
+    lookY = THREE.MathUtils.lerp(cfg.lookYStart, cfg.lookYEnd, eased2);
+  }
+
   _pos.set(
     cfg.origin[0] + Math.sin(angle) * r,
     cfg.origin[1] + y,
@@ -87,30 +94,7 @@ function applyOrbit(
   );
 
   camera.position.lerp(_pos, cfg.lerpSpeed * delta);
-  camera.lookAt(cfg.origin[0], cfg.origin[1] + cfg.lookY, cfg.origin[2]);
-  setFov(camera, cfg.fov, delta);
-}
-
-function applyTracking(
-  camera: THREE.Camera,
-  cfg: TrackingParams,
-  progress: number,
-  delta: number,
-) {
-  const eased = progress < 0.5
-    ? 2 * progress * progress
-    : 1 - Math.pow(-2 * progress + 2, 2) / 2;
-
-  _start.set(...cfg.startPos);
-  _end.set(...cfg.endPos);
-  _pos.lerpVectors(_start, _end, eased);
-
-  _start.set(...cfg.lookAtStart);
-  _end.set(...cfg.lookAtEnd);
-  _look.lerpVectors(_start, _end, eased);
-
-  camera.position.lerp(_pos, cfg.lerpSpeed * delta);
-  camera.lookAt(_look);
+  camera.lookAt(cfg.origin[0], cfg.origin[1] + lookY, cfg.origin[2]);
   setFov(camera, cfg.fov, delta);
 }
 
@@ -195,8 +179,6 @@ export default function CameraController() {
     if (phase !== prevPhase.current) {
       if (cfg.type === 'photosphere') {
         camera.position.set(...cfg.centre);
-      } else if (cfg.type === 'tracking') {
-        camera.position.set(...cfg.startPos);
       } else if (cfg.type === 'orbit') {
         const angle = cfg.angleStart;
         const r = cfg.radiusStart !== undefined ? cfg.radiusStart : cfg.radius;
@@ -220,9 +202,6 @@ export default function CameraController() {
         break;
       case 'orbit':
         applyOrbit(camera, cfg, pp, delta);
-        break;
-      case 'tracking':
-        applyTracking(camera, cfg, pp, delta);
         break;
       case 'photosphere':
         applyPhotosphere(camera, cfg, phase, pp, delta);

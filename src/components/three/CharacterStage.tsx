@@ -8,14 +8,20 @@ import { useRef, useEffect, useMemo, useState } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import { useGLTF, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
-import { scrollStore, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
+import { scrollStore, PHASES, phaseOpacity, phaseProgress } from '@/lib/scrollStore';
 import { FireflyGame } from './FireflyGame';
 
 function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-function computeHotspotOpacity(phaseIndex: number, gp: number, offsetFraction?: number): number {
+function computePhaseActiveOpacity(phaseIndex: number, gp: number): number {
+  const phase = PHASES[phaseIndex];
+  return gp > phase.start && gp < phase.end ? 1 : 0;
+}
+
+function computeHotspotOpacity(phaseIndex: number, gp: number, offsetFraction?: number, instantVisibility?: boolean): number {
+  if (instantVisibility) return computePhaseActiveOpacity(phaseIndex, gp);
   if (!offsetFraction) return phaseOpacity(phaseIndex, gp, 0.02);
   const pp = phaseProgress(phaseIndex, gp);
   if (pp < offsetFraction) return 0;
@@ -26,7 +32,7 @@ function computeHotspotOpacity(phaseIndex: number, gp: number, offsetFraction?: 
   return t * t * (3 - 2 * t);
 }
 
-function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScale = 1, triggerScale = 1, cardWidth, phaseOffsetFraction }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number, htmlScale?: number, triggerScale?: number, cardWidth?: string, phaseOffsetFraction?: number }) {
+function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScale = 1, triggerScale = 1, cardScale = 1, cardWidth, phaseOffsetFraction, instantVisibility = false }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number, htmlScale?: number, triggerScale?: number, cardScale?: number, cardWidth?: string, phaseOffsetFraction?: number, instantVisibility?: boolean }) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
@@ -37,7 +43,7 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
 
   useFrame(() => {
     const gp = scrollStore.globalProgress;
-    const newOpacity = computeHotspotOpacity(phaseIndex, gp, phaseOffsetFraction);
+    const newOpacity = computeHotspotOpacity(phaseIndex, gp, phaseOffsetFraction, instantVisibility);
 
     // Only update state if it crossed the 0 threshold to avoid excessive re-renders
     if ((newOpacity > 0 && opacity === 0) || (newOpacity === 0 && opacity > 0)) {
@@ -78,7 +84,7 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
 
         {/* 3D HTML Card */}
         {isOpen && (
-          <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
+          <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale * cardScale}>
             <div
               ref={cardRef}
               className="flex flex-col text-white"
@@ -88,21 +94,21 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
                 background: 'rgba(6, 7, 14, 0.82)',
                 backdropFilter: 'blur(24px)',
                 WebkitBackdropFilter: 'blur(24px)',
-                borderRadius: '20px',
+                borderRadius: '24px',
                 border: '1px solid rgba(255,255,255,0.13)',
                 boxShadow: '0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)',
-                padding: '18px 20px 20px',
+                padding: '28px 32px 30px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
-                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.26em', color: 'var(--noir-cyan)', textTransform: 'uppercase', margin: 0 }}>{title}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', paddingBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
+                <p style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.26em', color: 'var(--noir-cyan)', textTransform: 'uppercase', margin: 0 }}>{title}</p>
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-                  style={{ fontSize: '13px', lineHeight: 1, background: 'none', border: 'none', padding: '2px 5px', color: 'rgba(255,255,255,0.28)', cursor: 'pointer' }}
+                  style={{ fontSize: '18px', lineHeight: 1, background: 'none', border: 'none', padding: '4px 8px', color: 'rgba(255,255,255,0.28)', cursor: 'pointer' }}
                 >✕</button>
               </div>
-              <div style={{ fontSize: '13px', fontWeight: 300, lineHeight: 1.6, color: 'rgba(255,255,255,0.82)' }}>
+              <div style={{ fontSize: '20px', fontWeight: 300, lineHeight: 1.8, color: 'rgba(255,255,255,0.82)' }}>
                 {children}
               </div>
             </div>
@@ -120,6 +126,7 @@ function useFade(
   phaseIndex: number,
   matsRef: React.RefObject<THREE.Material[]>,
   restoreDepthWrite: boolean,
+  instantVisibility = false,
 ) {
   const lastOpacity = useRef(-1);
   const wasVisible = useRef(false);
@@ -127,7 +134,9 @@ function useFade(
   useFrame(() => {
     if (!groupRef.current) return;
     const gp = scrollStore.globalProgress;
-    const opacity = phaseOpacity(phaseIndex, gp, 0.06);
+    const opacity = instantVisibility
+      ? computePhaseActiveOpacity(phaseIndex, gp)
+      : phaseOpacity(phaseIndex, gp, 0.06);
 
     const nowVisible = opacity > 0.001;
     if (
@@ -261,7 +270,7 @@ function BattleBusModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(wrapperRef, 1, cachedMats, true);
+  useFade(wrapperRef, 1, cachedMats, true, true);
 
   useFrame(() => {
     if (!wrapperRef.current?.visible) {
@@ -284,7 +293,7 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[2.5, 5, 7]} title="WHO I AM" phaseIndex={1} htmlScale={0.8} triggerScale={4}>
+      <InfoHotspot position={[-400, 8, 4]} title="WHO I AM" phaseIndex={1} htmlScale={3.5} triggerScale={10} cardScale={7} instantVisibility cardWidth="700px">
         <div className="flex flex-col gap-4">
           <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
         </div>
