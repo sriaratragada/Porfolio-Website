@@ -71,24 +71,23 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
       fogDensity: 0.018,
     },
   },
-  // Phase 1 — Battle Bus: orbit that starts above the drop animation.
-  // Bus spawns at Y=20 (top=26) and falls to Y=0 over 1.4s.
-  // yStart=30 keeps the camera above the bus during the fall; yEnd=12 is the final hover.
+  // Phase 1 — Battle Bus: keep the camera clearly outside the GLB while it drops in.
+  // The bus is scaled fairly large, so the orbit radius needs to stay well beyond its full envelope.
   {
     id: 'battlebus',
     camera: {
       type: 'orbit',
       origin: [0, 0, 0],
-      radius: 18,
-      y: 12,
-      lookY: 3.0,
-      angleStart: Math.PI * 0.55,
-      angleEnd: Math.PI * 0.05,
-      fov: 65,
+      radius: 60,
+      y: 14,
+      lookY: 6.5,
+      angleStart: Math.PI * 0.78,
+      angleEnd: -Math.PI * 0.22,
+      fov: 58,
       lerpSpeed: 2.4,
       fogDensity: 0.002,
       descendingY: true,
-      yStart: 30,
+      yStart: 22,
       yEnd: 12,
     },
   },
