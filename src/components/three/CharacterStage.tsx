@@ -230,8 +230,6 @@ function BattleBusModel() {
   const { scene } = useGLTF('/models/battle-bus.glb', true);
   const wrapperRef = useRef<THREE.Group>(null);
   const modelRef = useRef<THREE.Group>(null);
-  const dropTimer = useRef(0);
-  const hoverOffset = useRef('Bus'.length * 0.731);
   const cachedMats = useRef<THREE.Material[]>([]);
 
   useEffect(() => {
@@ -265,20 +263,20 @@ function BattleBusModel() {
 
   useFade(wrapperRef, 1, cachedMats, true);
 
-  useFrame((_, delta) => {
+  useFrame(() => {
     if (!wrapperRef.current?.visible) {
-      dropTimer.current = 0;
       return;
     }
     const gp = scrollStore.globalProgress;
     const pp = phaseProgress(1, gp);
     modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
 
-    dropTimer.current = Math.min(dropTimer.current + delta, 1.4);
-    const dropT = easeOutCubic(dropTimer.current / 1.4);
+    // Keep Phase 1 deterministic by deriving the bus motion entirely from scroll progress.
+    const dropPhase = Math.min(pp / 0.35, 1);
+    const dropT = easeOutCubic(dropPhase);
     const dropY = THREE.MathUtils.lerp(20, 0, dropT);
-    hoverOffset.current += delta * 0.8;
-    modelRef.current!.position.y = dropY + Math.sin(hoverOffset.current) * 0.35;
+    const hoverY = Math.sin(pp * Math.PI * 3) * 0.35;
+    modelRef.current!.position.y = dropY + hoverY;
   });
 
   return (
