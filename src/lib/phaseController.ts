@@ -82,8 +82,8 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
       // to that centre and stay much farther back so we clear the side walls.
       origin: [0, 3.0, 0],
       radius: 38,
-      radiusStart: 44,
-      radiusEnd: 32,
+      radiusStart: 20,
+      radiusEnd: 15,
       y: 13,
       yStart: 17,
       yEnd: 11,
