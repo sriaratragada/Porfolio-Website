@@ -14,6 +14,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
 import { Sparkles, Code, Cpu, Layers, Mountain, Rocket } from 'lucide-react';
 import { scrollStore, PHASES, TRANSITIONS } from '@/lib/scrollStore';
+import { useLenis } from '@/components/layout/LenisProvider';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -34,16 +35,15 @@ interface PanelProps {
   icon?: ReactNode;
 }
 
-function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, align = 'left', icon }: PanelProps) {
+function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, align = 'left', icon }: Omit<PanelProps, 'children'> & { children?: ReactNode }) {
   const wrapRef  = useRef<HTMLDivElement>(null);
   const labelRef = useRef<HTMLParagraphElement>(null);
   const titleRef = useRef<HTMLHeadingElement>(null);
-  const bodyRef  = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     if (!scrollEl || !wrapRef.current) return;
 
-    const FADE = (phaseEnd - phaseStart) * 0.18; // 18% of phase = fade zone
+    const FADE = (phaseEnd - phaseStart) * 0.18;
 
     const enterStart  = phaseStart;
     const enterEnd    = phaseStart + FADE;
@@ -52,12 +52,8 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
     const exitStart   = activeEnd;
     const exitEnd     = phaseEnd;
 
-    const els = [labelRef.current, titleRef.current, bodyRef.current];
+    gsap.set([labelRef.current, titleRef.current], { transformPerspective: P, z: -300, opacity: 0, overwrite: true });
 
-    // Initial state: invisible, far behind
-    gsap.set(els, { transformPerspective: P, z: -300, opacity: 0, overwrite: true });
-
-    // ENTER: fly in from behind (z=-300 → 0), staggered per element
     const st1 = ScrollTrigger.create({
       trigger: scrollEl,
       start: `${enterStart}% top`,
@@ -67,11 +63,9 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
         const p = self.progress;
         gsap.set(labelRef.current, { transformPerspective: P, z: -300 + p * 300, opacity: p });
         gsap.set(titleRef.current, { transformPerspective: P, z: -300 + p * 300, opacity: p });
-        gsap.set(bodyRef.current,  { transformPerspective: P, z: -300 + p * 300, opacity: p });
       },
     });
 
-    // ACTIVE: depth layers separate as user scrolls through the phase
     const st2 = ScrollTrigger.create({
       trigger: scrollEl,
       start: `${activeStart}% top`,
@@ -79,13 +73,11 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
       scrub: 1,
       onUpdate: (self) => {
         const p = self.progress;
-        gsap.set(labelRef.current, { transformPerspective: P, z: p * 24  });
-        gsap.set(titleRef.current, { transformPerspective: P, z: p * 70  });
-        gsap.set(bodyRef.current,  { transformPerspective: P, z: p * 38  });
+        gsap.set(labelRef.current, { transformPerspective: P, z: p * 24 });
+        gsap.set(titleRef.current, { transformPerspective: P, z: p * 70 });
       },
     });
 
-    // EXIT: zoom towards camera (z → +120) and fade out
     const st3 = ScrollTrigger.create({
       trigger: scrollEl,
       start: `${exitStart}% top`,
@@ -95,7 +87,6 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
         const p = self.progress;
         gsap.set(labelRef.current, { transformPerspective: P, z: 24  + p * 120, opacity: 1 - p });
         gsap.set(titleRef.current, { transformPerspective: P, z: 70  + p * 120, opacity: 1 - p });
-        gsap.set(bodyRef.current,  { transformPerspective: P, z: 38  + p * 120, opacity: 1 - p });
       },
     });
 
@@ -103,8 +94,8 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
   }, [scrollEl, phaseStart, phaseEnd]);
 
   const side = align === 'left'
-    ? { left: '5vw' }
-    : { right: '5vw' };
+    ? { left: 'clamp(16px, 5vw, 48px)' }
+    : { right: 'clamp(16px, 5vw, 48px)' };
 
   return (
     <div
@@ -112,9 +103,8 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
       style={{
         position: 'fixed',
         ...side,
-        top: '50%',
-        transform: 'translateY(-50%)',
-        width: 'clamp(280px, 38vw, 520px)',
+        top: 'clamp(72px, 10vh, 96px)',
+        width: 'clamp(220px, 40vw, 480px)',
         pointerEvents: 'none',
         zIndex: 20,
       }}
@@ -125,7 +115,7 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
           display: 'flex',
           alignItems: 'center',
           gap: '8px',
-          marginBottom: '12px',
+          marginBottom: '10px',
           opacity: 0,
           color: 'var(--noir-cyan)',
         }}
@@ -134,9 +124,9 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
         <p
           style={{
             fontFamily: 'var(--font-space-grotesk)',
-            fontSize: '12px',
+            fontSize: '11px',
             fontWeight: 600,
-            letterSpacing: '0.25em',
+            letterSpacing: '0.28em',
             margin: 0,
           }}
         >
@@ -150,23 +140,16 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, children, al
         style={{
           fontFamily: 'var(--font-space-grotesk)',
           fontWeight: 700,
-          fontSize: 'clamp(42px, 5vw, 64px)',
-          lineHeight: 0.95,
+          fontSize: 'clamp(38px, 5vw, 64px)',
+          lineHeight: 0.92,
           margin: 0,
           letterSpacing: '-0.02em',
           opacity: 0,
+          whiteSpace: 'pre-line',
         }}
       >
         {title}
       </h2>
-
-      <div
-        ref={bodyRef}
-        className="glass-panel"
-        style={{ marginTop: '24px', padding: '24px', color: 'rgba(255,255,255,0.85)', fontSize: '15px', lineHeight: 1.7, opacity: 0 }}
-      >
-        {children}
-      </div>
     </div>
   );
 }
@@ -178,6 +161,7 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
   const nameRef  = useRef<HTMLHeadingElement>(null);
   const roleRef  = useRef<HTMLParagraphElement>(null);
   const ctaRef   = useRef<HTMLDivElement>(null);
+  const lenis    = useLenis();
 
   useEffect(() => {
     if (!scrollEl || !hudRef.current) return;
@@ -226,7 +210,7 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
       style={{
         position: 'fixed',
         bottom: '72px',
-        left: '48px',
+        left: 'clamp(16px, 5vw, 48px)',
         pointerEvents: 'none',
         zIndex: 20,
       }}
@@ -238,18 +222,18 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
         </p>
       </div>
 
-      <div style={{ fontSize: 'clamp(52px, 8vw, 96px)', lineHeight: 0.95 }}>
+      <div style={{ fontSize: 'clamp(44px, 7vw, 96px)', lineHeight: 0.95 }}>
         <h1
           ref={nameRef}
           className="text-gradient-rose"
           style={{ fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}
         >
-          YOUR<br />NAME
+          SRI<br />ATRAGADA
         </h1>
       </div>
 
-      <p ref={roleRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: '15px', color: 'var(--noir-cyan)', letterSpacing: '0.05em', marginTop: '24px' }}>
-        Developer<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Creator<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Engineer
+      <p ref={roleRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(12px, 1.4vw, 15px)', color: 'var(--noir-cyan)', letterSpacing: '0.05em', marginTop: '24px' }}>
+        Developer<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Engineer<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Builder
       </p>
 
       <div
@@ -257,6 +241,7 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
         style={{ marginTop: '32px', pointerEvents: 'auto' }}
       >
         <button
+          onClick={() => lenis?.scrollTo(document.documentElement.scrollHeight * PHASES[1].start)}
           className="group relative overflow-hidden rounded-full border border-white/20 bg-white/5 px-8 py-3 text-sm font-semibold tracking-widest text-white backdrop-blur-md transition-all hover:border-white/40 hover:bg-white/10"
           style={{ fontFamily: 'var(--font-space-grotesk)' }}
         >
@@ -445,6 +430,80 @@ function DragIndicator() {
   );
 }
 
+// ── Firefly hint (Phase 5 only) ───────────────────────────────────────────
+function FireflyHint({ scrollEl }: { scrollEl: HTMLElement | null }) {
+  const ref = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    if (!scrollEl || !ref.current) return;
+
+    const phase = PHASES[5];
+    const showStart = pct(phase.start);
+    // Visible for the first 40% of Phase 5, then fades out
+    const showEnd = pct(phase.start + (phase.end - phase.start) * 0.4);
+
+    const st = ScrollTrigger.create({
+      trigger: scrollEl,
+      start: `${showStart}% top`,
+      end: `${showEnd}% top`,
+      scrub: 0.6,
+      onUpdate: (self) => {
+        if (!ref.current) return;
+        const p = self.progress;
+        const opacity = p < 0.15 ? p / 0.15 : p > 0.7 ? (1 - p) / 0.3 : 1;
+        ref.current.style.opacity = String(Math.min(1, Math.max(0, opacity)));
+      },
+    });
+
+    return () => st.kill();
+  }, [scrollEl]);
+
+  return (
+    <div
+      ref={ref}
+      style={{
+        position: 'fixed',
+        top: '80px',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        display: 'flex',
+        flexDirection: 'column',
+        alignItems: 'center',
+        gap: '10px',
+        pointerEvents: 'none',
+        zIndex: 30,
+        opacity: 0,
+      }}
+    >
+      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+        {['#3b82f6', '#ef4444', '#10b981', '#eab308'].map((color) => (
+          <div
+            key={color}
+            style={{
+              width: '10px', height: '10px', borderRadius: '50%',
+              background: color,
+              boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
+              animation: 'pulse 2s ease-in-out infinite',
+            }}
+          />
+        ))}
+      </div>
+      <span
+        style={{
+          fontFamily: 'var(--font-space-grotesk)',
+          fontSize: '11px',
+          fontWeight: 600,
+          letterSpacing: '0.22em',
+          color: 'rgba(255,255,255,0.85)',
+          whiteSpace: 'nowrap',
+        }}
+      >
+        CLICK THE GLOWING ORBS TO EXPLORE
+      </span>
+    </div>
+  );
+}
+
 // ── Main export ──────────────────────────────────────────────────────────────
 export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | null }) {
   return (
@@ -453,15 +512,81 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
       <div className="letterbox-bar letterbox-top" style={{ zIndex: 25 }} />
       <div className="letterbox-bar letterbox-bottom" style={{ zIndex: 25 }} />
 
+      {/* Hero panel — Phase 0 */}
+      <HeroPanel scrollEl={scrollEl} />
       <ScrollIndicator scrollEl={scrollEl} />
+
+      {/* Phase overlay panels — depth-layered GSAP text per phase */}
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={pct(PHASES[1].start)} phaseEnd={pct(PHASES[1].end)}
+        label="ABOUT ME" title={'WHO I\nAM'}
+        icon={<Sparkles size={14} />} align="left"
+      >
+        <p>CS + Finance at Stony Brook University. I build full-stack applications, scalable backend systems, and AI-driven platforms. Click the orb to learn more.</p>
+      </PhasePanel>
+
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={pct(PHASES[2].start)} phaseEnd={pct(PHASES[2].end)}
+        label="EXPERIENCE" title={'MY\nJOURNEY'}
+        icon={<Layers size={14} />} align="right"
+      >
+        <p>From NLP pipelines at Stony Brook to AWS infrastructure at Atlas Legacy. Explore my work history by clicking the hotspots around the track.</p>
+      </PhasePanel>
+
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={pct(PHASES[3].start)} phaseEnd={pct(PHASES[3].end)}
+        label="PROJECTS" title={'WHAT I\nBUILD'}
+        icon={<Code size={14} />} align="left"
+      >
+        <p>Open-world RPGs, real-time AI fitness platforms, and low-latency C++ trading engines. Tap a glowing hotspot to dive into each project.</p>
+      </PhasePanel>
+
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={pct(PHASES[4].start)} phaseEnd={pct(PHASES[4].end)}
+        label="SKILLS" title={'TECH\nSTACK'}
+        icon={<Cpu size={14} />} align="right"
+      >
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
+          <div><span style={{ color: 'var(--noir-cyan)', letterSpacing: '0.15em', fontSize: '10px', fontWeight: 700 }}>LANGUAGES</span><br />Python · TypeScript · C++ · Java · SQL</div>
+          <div><span style={{ color: 'var(--noir-cyan)', letterSpacing: '0.15em', fontSize: '10px', fontWeight: 700 }}>FRAMEWORKS & AI</span><br />React · FastAPI · LangChain · Spring Boot</div>
+          <div><span style={{ color: 'var(--noir-cyan)', letterSpacing: '0.15em', fontSize: '10px', fontWeight: 700 }}>CLOUD & INFRA</span><br />AWS ECS · Docker · GitHub Actions · Pinecone</div>
+        </div>
+      </PhasePanel>
+
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={pct(PHASES[5].start)} phaseEnd={pct(PHASES[5].end)}
+        label="EXPLORE" title={'CATCH\nTHEM ALL'}
+        icon={<Mountain size={14} />} align="left"
+      >
+        <p>Four glowing orbs drift through the enchanted forest — each one holds a piece of my technical story. Click all four to unlock something special.</p>
+      </PhasePanel>
+
+      <PhasePanel
+        scrollEl={scrollEl}
+        phaseStart={pct(PHASES[6].start)} phaseEnd={pct(PHASES[6].end)}
+        label="CONTACT" title={"LET'S\nCONNECT"}
+        icon={<Rocket size={14} />} align="right"
+      >
+        <p>The journey ends here — and the next one begins. I&apos;m always open to new opportunities, collaborations, and conversations. Reach out anytime.</p>
+        <p style={{ marginTop: '12px', color: 'var(--noir-cyan)', fontSize: '13px' }}>sridharatragada@gmail.com</p>
+      </PhasePanel>
+
       {/* Phase progress dots */}
       <PhaseDots scrollEl={scrollEl} />
 
       {/* Black flash at every phase transition */}
       <TransitionFlash scrollEl={scrollEl} />
 
-      {/* Blinking Drag Indicator for photo spheres */}
+      {/* Blinking Drag Indicator for photo spheres (phases 3–5) */}
       <DragIndicator />
+
+      {/* Phase 5 — hint to click the firefly orbs */}
+      <FireflyHint scrollEl={scrollEl} />
     </>
   );
 }

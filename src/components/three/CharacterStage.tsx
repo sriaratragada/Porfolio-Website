@@ -15,17 +15,29 @@ function easeOutCubic(t: number): number {
   return 1 - Math.pow(1 - t, 3);
 }
 
-function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScale = 1 }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number, htmlScale?: number }) {
+function computeHotspotOpacity(phaseIndex: number, gp: number, offsetFraction?: number): number {
+  if (!offsetFraction) return phaseOpacity(phaseIndex, gp, 0.02);
+  const pp = phaseProgress(phaseIndex, gp);
+  if (pp < offsetFraction) return 0;
+  const fadeSize = 0.04;
+  const fadeIn = (pp - offsetFraction) / fadeSize;
+  const fadeOut = (1 - pp) / fadeSize;
+  const t = Math.min(1, Math.min(fadeIn, fadeOut));
+  return t * t * (3 - 2 * t);
+}
+
+function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScale = 1, triggerScale = 1, cardWidth, phaseOffsetFraction }: { position: [number, number, number], title: string, children: React.ReactNode, rotation?: [number, number, number], phaseIndex: number, htmlScale?: number, triggerScale?: number, cardWidth?: string, phaseOffsetFraction?: number }) {
   const [isOpen, setIsOpen] = useState(false);
   const triggerRef = useRef<HTMLDivElement>(null);
   const cardRef = useRef<HTMLDivElement>(null);
   // Track opacity in state so we can fully unmount the Html component when it's totally hidden
   const [opacity, setOpacity] = useState(0);
+  // Compute mobile-safe card width once on mount
+  const effectiveCardWidth = cardWidth ?? (typeof window !== 'undefined' && window.innerWidth < 768 ? `${Math.min(300, window.innerWidth - 32)}px` : '380px');
 
   useFrame(() => {
     const gp = scrollStore.globalProgress;
-    // fadeSize=0.02 means it fades in completely within the first 2% of the phase, appearing very early!
-    const newOpacity = phaseOpacity(phaseIndex, gp, 0.02);
+    const newOpacity = computeHotspotOpacity(phaseIndex, gp, phaseOffsetFraction);
 
     // Only update state if it crossed the 0 threshold to avoid excessive re-renders
     if ((newOpacity > 0 && opacity === 0) || (newOpacity === 0 && opacity > 0)) {
@@ -50,7 +62,7 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
       <Float floatIntensity={1.5} speed={2.5} rotationIntensity={0.1}>
         {/* Interactive Trigger */}
         {!isOpen && (
-          <Html center transform sprite zIndexRange={[100, 0]} scale={htmlScale}>
+          <Html center transform sprite zIndexRange={[100, 0]} scale={htmlScale * triggerScale}>
             <div ref={triggerRef} style={{ transition: 'opacity 0.1s' }}>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
@@ -67,17 +79,30 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
         {/* 3D HTML Card */}
         {isOpen && (
           <Html center transform sprite position={[0, 0, 0]} style={{ transition: 'all 0.3s' }} zIndexRange={[100, 0]} scale={htmlScale}>
-            <div 
+            <div
               ref={cardRef}
-              className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)]"
-              style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}
+              className="flex flex-col text-white"
+              style={{
+                width: effectiveCardWidth,
+                fontFamily: 'var(--font-space-grotesk)',
+                background: 'rgba(6, 7, 14, 0.82)',
+                backdropFilter: 'blur(24px)',
+                WebkitBackdropFilter: 'blur(24px)',
+                borderRadius: '20px',
+                border: '1px solid rgba(255,255,255,0.13)',
+                boxShadow: '0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)',
+                padding: '18px 20px 20px',
+              }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div className="flex items-center justify-between mb-5 border-b border-white/10 pb-3">
-                <h3 className="text-xl font-bold uppercase tracking-widest bg-gradient-to-br from-white to-white/50 bg-clip-text text-transparent">{title}</h3>
-                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); }} className="text-white/40 hover:text-white transition-colors cursor-pointer p-1 bg-white/5 rounded-full hover:bg-white/10">✕</button>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '12px', paddingBottom: '10px', borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.26em', color: 'var(--noir-cyan)', textTransform: 'uppercase', margin: 0 }}>{title}</p>
+                <button
+                  onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
+                  style={{ fontSize: '13px', lineHeight: 1, background: 'none', border: 'none', padding: '2px 5px', color: 'rgba(255,255,255,0.28)', cursor: 'pointer' }}
+                >✕</button>
               </div>
-              <div className="text-sm font-light leading-relaxed text-white/80">
+              <div style={{ fontSize: '13px', fontWeight: 300, lineHeight: 1.6, color: 'rgba(255,255,255,0.82)' }}>
                 {children}
               </div>
             </div>
@@ -190,7 +215,7 @@ function SpiderManModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[0, 1.5, 0]} title="Sri Atragada" phaseIndex={0}>
+      <InfoHotspot position={[0, 1.5, 0]} title="Sri Atragada" phaseIndex={0} htmlScale={1.25} cardWidth="220px">
         <div className="flex flex-col gap-4">
           <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-40 object-cover rounded-lg border border-white/10" />
           <p>I am a Computer Science student at Stony Brook University with a minor in Finance. I build full-stack applications, scalable backend systems, and AI-driven platforms.</p>
@@ -261,7 +286,7 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3.5, 3, 0]} title="WHO I AM" phaseIndex={1} htmlScale={0.15}>
+      <InfoHotspot position={[6, 4, 10]} title="WHO I AM" phaseIndex={1} htmlScale={0.8} triggerScale={4}>
         <div className="flex flex-col gap-4">
           <p>I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
         </div>
@@ -322,55 +347,53 @@ function RaceTrackModel() {
       </group>
 
       {/* SBU Experience */}
-      <InfoHotspot position={[-8, 2, 5]} title="SBU Intern" phaseIndex={2} htmlScale={1.5}>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-6">
-            <img src="/images/sbu.png" alt="SBU" className="w-24 h-24 rounded-[1.5rem] bg-white p-2" />
-            <div>
-              <p className="font-bold text-white">Stony Brook University</p>
-              <p className="text-xl opacity-70">Software Engineer Intern</p>
+      <InfoHotspot position={[-20, 2, 6]} title="SBU Intern" phaseIndex={2} htmlScale={1.75} cardWidth="420px">
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+          <img src="/images/sbu.png" alt="SBU" style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'white', padding: '6px', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+              <p style={{ fontWeight: 700, fontSize: '13px', color: '#fff' }}>Stony Brook University</p>
+              <p style={{ fontSize: '11px', opacity: 0.45, flexShrink: 0, marginLeft: '8px' }}>Sep 2025 – Feb 2026</p>
             </div>
+            <p style={{ fontSize: '11px', color: 'var(--noir-cyan)', marginBottom: '8px', opacity: 0.8 }}>Software Engineer Intern</p>
+            <p style={{ fontSize: '12px', lineHeight: 1.55, opacity: 0.78 }}>Deployed a Python NLP service converting natural-language library queries into Boolean search expressions for 25K+ users. Reduced zero-result searches by 35% via Pinecone semantic search.</p>
           </div>
-          <p className="text-xl">Sep 2025 – Feb 2026</p>
-          <p className="text-xl opacity-80">Designed and shipped a Python NLP service that converts natural-language library queries into Boolean search expressions.</p>
         </div>
       </InfoHotspot>
 
       {/* WEX Experience */}
-      <InfoHotspot position={[8, 2, 5]} title="WEX Engineer" phaseIndex={2} htmlScale={1.5}>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-6">
-            <img src="/images/wex.png" alt="WEX" className="w-24 h-24 rounded-[1.5rem] bg-white p-2" />
-            <div>
-              <p className="font-bold text-white">WEX</p>
-              <p className="text-xl opacity-70">Incoming Security Engineer</p>
+      <InfoHotspot position={[20, 2, 6]} title="WEX Engineer" phaseIndex={2} htmlScale={1.3} cardWidth="420px">
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+          <img src="/images/wex.png" alt="WEX" style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'white', padding: '6px', flexShrink: 0 }} />
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+              <p style={{ fontWeight: 700, fontSize: '13px', color: '#fff' }}>WEX Inc.</p>
+              <p style={{ fontSize: '11px', opacity: 0.45, flexShrink: 0, marginLeft: '8px' }}>May 2026 →</p>
             </div>
+            <p style={{ fontSize: '11px', color: 'var(--noir-cyan)', marginBottom: '8px', opacity: 0.8 }}>Incoming Security Engineer</p>
+            <p style={{ fontSize: '12px', lineHeight: 1.55, opacity: 0.78 }}>Driving impact across application security and DevSecOps. Focused on securing cloud-native infrastructure and integrating security earlier into the development lifecycle.</p>
           </div>
-          <p className="text-xl">May 2026</p>
-          <p className="text-xl opacity-80">Incoming Security Engineer driving impact across application security and DevSecOps.</p>
         </div>
       </InfoHotspot>
 
       {/* Atlas Legacy */}
-      <InfoHotspot position={[-5, 3, -12]} title="Atlas Legacy" phaseIndex={2} htmlScale={1.5}>
-        <div className="flex flex-col gap-4">
-          <div className="flex items-center gap-6">
-            <div className="w-24 h-24 rounded-[1.5rem] bg-blue-600 flex items-center justify-center font-bold text-4xl">A</div>
-            <div>
-              <p className="font-bold text-white">Atlas Legacy Inc.</p>
-              <p className="text-xl opacity-70">Software Engineer Intern</p>
+      <InfoHotspot position={[-16, 3, -25]} title="Atlas Legacy" phaseIndex={2} htmlScale={2.5} cardWidth="320px">
+        <div style={{ display: 'flex', gap: '14px', alignItems: 'flex-start' }}>
+          <div style={{ width: '48px', height: '48px', borderRadius: '12px', background: 'linear-gradient(135deg, #2563eb, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontWeight: 700, fontSize: '20px', flexShrink: 0 }}>A</div>
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', marginBottom: '3px' }}>
+              <p style={{ fontWeight: 700, fontSize: '13px', color: '#fff' }}>Atlas Legacy Inc.</p>
+              <p style={{ fontSize: '11px', opacity: 0.45, flexShrink: 0, marginLeft: '8px' }}>May – Aug 2025</p>
             </div>
+            <p style={{ fontSize: '11px', color: 'var(--noir-cyan)', marginBottom: '8px', opacity: 0.8 }}>Software Engineer Intern</p>
+            <p style={{ fontSize: '12px', lineHeight: 1.55, opacity: 0.78 }}>Built containerized AWS ECS deployment with GitHub Actions CI/CD, cutting release time by 40%. Optimized EC2 costs by 20% and shipped a demand forecasting pipeline saving 10 hrs/week.</p>
           </div>
-          <p className="text-xl">May 2025 – Aug 2025</p>
-          <p className="text-xl opacity-80">Built containerized AWS ECS deployment with GitHub Actions CI/CD pipelines, cutting release cycle time by 40%.</p>
         </div>
       </InfoHotspot>
 
       {/* Future Endeavors */}
-      <InfoHotspot position={[5, 3, -12]} title="Future Endeavors" phaseIndex={2} htmlScale={1.5}>
-        <div className="flex flex-col gap-4">
-          <p className="text-2xl opacity-90 leading-relaxed">I am eager to tackle new technical challenges while continuing to grow as a collaborative and reliable teammate. My goal is to build secure, effective technology while maintaining the curiosity and positive energy that keeps the work engaging for everyone involved.</p>
-        </div>
+      <InfoHotspot position={[16, 3, -20]} title="Future Endeavors" phaseIndex={2} htmlScale={2} cardWidth="300px">
+        <p style={{ fontSize: '13px', lineHeight: 1.65, opacity: 0.85 }}>I'm eager to tackle new technical challenges while growing as a collaborative teammate. My goal is to build secure, effective technology — and bring the curiosity and energy that keeps the work engaging for everyone involved.</p>
       </InfoHotspot>
     </group>
   );
@@ -436,7 +459,7 @@ function HangarModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[3, 3.5, -6]} title="CONTACT?" phaseIndex={6} htmlScale={0.5}>
+      <InfoHotspot position={[3, 3.5, -6]} title="CONTACT?" phaseIndex={6} htmlScale={0.5} triggerScale={3}>
         <div className="flex flex-col gap-6">
           <p className="text-2xl">This is where the journey ends… and the next one begins. Reach out to me anytime.</p>
           <p className="font-bold text-2xl">Email: sridharatragada@gmail.com</p>
@@ -522,27 +545,38 @@ export default function CharacterStage() {
         position={[0, 0, 0]}
       >
         {/* Phase 3 - Projects */}
-        <InfoHotspot position={[4, 0, 4]} title="CHRONICLE RPG" phaseIndex={3} htmlScale={0.35}>
-          <div className="flex flex-col gap-4">
-            <p className="text-xl opacity-70 text-blue-300 font-bold tracking-wider">React, Python, Zustand, ChromaDB</p>
-            <p className="text-xl opacity-80 mt-1 leading-relaxed">Architected a fully playable 10,000 × 10,000 tile open-world RPG engine where the player navigates a living world of hundreds of autonomous agents.</p>
-            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" className="mt-2 text-xl text-[#e62429] hover:text-white flex items-center gap-2 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+        <InfoHotspot position={[4, 0, 4]} title="CHRONICLE RPG" phaseIndex={3} htmlScale={0.42}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {['React', 'Python', 'Zustand', 'ChromaDB', 'RAG'].map(t => (
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)', color: '#93c5fd' }}>{t}</span>
+              ))}
+            </div>
+            <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Architected a fully playable 10,000 × 10,000 tile open-world RPG engine. Hundreds of autonomous NPC agents powered by RAG-based persistent memory.</p>
+            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#e62429', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
+          </div>
+        </InfoHotspot>
+        <InfoHotspot position={[4, 0, 0]} title="FORMFLOW AI" phaseIndex={3} htmlScale={0.42}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {['JavaScript', 'MediaPipe', 'Socket.IO', 'MongoDB'].map(t => (
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', color: '#6ee7b7' }}>{t}</span>
+              ))}
+            </div>
+            <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Real-time AI fitness platform scoring workout form rep-by-rep via webcam, with multiplayer leaderboards. <span style={{ color: '#fbbf24', fontWeight: 600 }}>🏆 2nd Place — Code-A-Site Hackathon</span></p>
+            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#e62429', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
           </div>
         </InfoHotspot>
 
-        <InfoHotspot position={[4, 0, 0]} title="FORMFLOW AI" phaseIndex={3} htmlScale={0.35}>
-          <div className="flex flex-col gap-4">
-            <p className="text-xl opacity-70 text-green-300 font-bold tracking-wider">JavaScript, MediaPipe, Socket.IO, MongoDB</p>
-            <p className="text-xl opacity-80 mt-1 leading-relaxed">Built a real-time AI fitness platform that scores workout form rep-by-rep via webcam. Won 2nd Place at Code-A-Site Hackathon.</p>
-            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" className="mt-2 text-xl text-[#e62429] hover:text-white flex items-center gap-2 font-bold transition-colors">VIEW REPOSITORY ➔</a>
-          </div>
-        </InfoHotspot>
-
-        <InfoHotspot position={[4, 0, -4]} title="HF ORDER MATCHING" phaseIndex={3} htmlScale={0.35}>
-          <div className="flex flex-col gap-4">
-            <p className="text-xl opacity-70 text-red-300 font-bold tracking-wider">C++, CMake, GoogleTest</p>
-            <p className="text-xl opacity-80 mt-1 leading-relaxed">Engineered a low-latency matching engine in C++ implementing a Price-Time Priority (FIFO) algorithm and a Pro-Rata allocation model utilizing a largest-remainder split to execute limit and market orders with deterministic sub-microsecond performance.</p>
-            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" className="mt-2 text-xl text-[#e62429] hover:text-white flex items-center gap-2 font-bold transition-colors">VIEW REPOSITORY ➔</a>
+        <InfoHotspot position={[4, 0, -4]} title="HF ORDER MATCHING" phaseIndex={3} htmlScale={0.42}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {['C++', 'CMake', 'GoogleTest', 'Lock-free'].map(t => (
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)', color: '#fca5a5' }}>{t}</span>
+              ))}
+            </div>
+            <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Low-latency matching engine with Price-Time Priority (FIFO) and Pro-Rata allocation. Deterministic sub-microsecond order execution using lock-free data structures.</p>
+            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#e62429', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
           </div>
         </InfoHotspot>
       </SkyboxSphere>
@@ -552,10 +586,29 @@ export default function CharacterStage() {
         texturePath="/textures/clouds_panorama.jpg"
         position={[1000, 0, 0]}
       >
-        <InfoHotspot position={[0, 0, 5]} title="ABOVE THE CLOUDS" phaseIndex={4}>
-          <div className="flex flex-col gap-2">
-            <p>Breaking through the cloud line, snowy peaks stretch to the horizon in every direction.</p>
-          </div>
+        <InfoHotspot position={[5, 0,-1]} title="SKILLS" phaseIndex={4} htmlScale={0.4} cardWidth="400px" phaseOffsetFraction={0}>
+          {(() => {
+            const groups: { label: string; color: string; items: string[] }[] = [
+              { label: 'LANGUAGES', color: '#00e5ff', items: ['Python', 'TypeScript', 'C++', 'Java', 'SQL', 'R'] },
+              { label: 'FRAMEWORKS & AI', color: '#a78bfa', items: ['React', 'FastAPI', 'LangChain', 'Spring Boot', 'PyTorch'] },
+              { label: 'CLOUD & INFRA', color: '#34d399', items: ['AWS ECS', 'Docker', 'GitHub Actions', 'Pinecone'] },
+              { label: 'DATABASES', color: '#fb923c', items: ['PostgreSQL', 'MongoDB', 'Supabase', 'ChromaDB'] },
+            ];
+            return (
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                {groups.map(g => (
+                  <div key={g.label}>
+                    <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', opacity: 0.45, marginBottom: '6px' }}>{g.label}</p>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+                      {g.items.map(s => (
+                        <span key={s} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '100px', background: `${g.color}18`, border: `1px solid ${g.color}35`, color: g.color, fontWeight: 500 }}>{s}</span>
+                      ))}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            );
+          })()}
         </InfoHotspot>
       </SkyboxSphere>
 

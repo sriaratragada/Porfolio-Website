@@ -71,20 +71,25 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
       fogDensity: 0.018,
     },
   },
-  // Phase 1 — Battle Bus: 180° orbit
+  // Phase 1 — Battle Bus: orbit that starts above the drop animation.
+  // Bus spawns at Y=20 (top=26) and falls to Y=0 over 1.4s.
+  // yStart=30 keeps the camera above the bus during the fall; yEnd=12 is the final hover.
   {
     id: 'battlebus',
     camera: {
       type: 'orbit',
       origin: [0, 0, 0],
-      radius: 2.75,
-      y: 3.0,
-      lookY: 2.5,
-      angleStart: Math.PI * 0.65,
-      angleEnd: -Math.PI * 0.35,
-      fov: 62,
-      lerpSpeed: 3.5,
+      radius: 18,
+      y: 12,
+      lookY: 3.0,
+      angleStart: Math.PI * 0.55,
+      angleEnd: Math.PI * 0.05,
+      fov: 65,
+      lerpSpeed: 2.4,
       fogDensity: 0.002,
+      descendingY: true,
+      yStart: 30,
+      yEnd: 12,
     },
   },
   // Phase 2 — Race Track: 120° sweeping orbit, descending camera
@@ -93,17 +98,17 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     camera: {
       type: 'orbit',
       origin: [0, 0, 0],
-      radius: 20,
-      y: 10.0,          // ignored when descendingY is true
-      lookY: 2.0,
+      radius: 36,
+      y: 18.0,
+      lookY: 1.5,
       angleStart: Math.PI * 0.55,
       angleEnd: -Math.PI * 0.10,
-      fov: 58,
+      fov: 55,
       lerpSpeed: 3.0,
       fogDensity: 0.001,
       descendingY: true,
-      yStart: 10.0,
-      yEnd: 3.5,
+      yStart: 18.0,
+      yEnd: 6.0,
     },
   },
   // Phase 3 — Jungle: 360° photosphere at (0, 0, 0)

@@ -167,10 +167,20 @@ export default function CameraController() {
     const cfg   = PHASE_CONFIGS[phase]?.camera;
     if (!cfg) return;
 
-    // Instant teleport when entering a photosphere phase
+    // Instant teleport on phase entry to avoid lerping through geometry
     if (phase !== prevPhase.current) {
-      const centre = getPhotosphereCentre(phase);
-      if (centre) camera.position.copy(centre);
+      if (cfg.type === 'photosphere') {
+        camera.position.set(...cfg.centre);
+      } else if (cfg.type === 'orbit') {
+        const angle = cfg.angleStart;
+        const r = cfg.radiusStart !== undefined ? cfg.radiusStart : cfg.radius;
+        const y = (cfg.descendingY && cfg.yStart !== undefined) ? cfg.yStart : cfg.y;
+        camera.position.set(
+          cfg.origin[0] + Math.sin(angle) * r,
+          cfg.origin[1] + y,
+          cfg.origin[2] + Math.cos(angle) * r,
+        );
+      }
       prevPhase.current = phase;
     }
 

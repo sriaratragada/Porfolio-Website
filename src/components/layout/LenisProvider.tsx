@@ -19,6 +19,11 @@ export default function LenisProvider({ children }: { children: ReactNode }) {
   const [lenis, setLenis] = useState<Lenis | null>(null);
 
   useEffect(() => {
+    // Prevent browser from restoring scroll position on reload
+    history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
+    scrollStore.globalProgress = 0;
+
     const l = new Lenis({
       duration: 1.2,
       easing: (t: number) => Math.min(1, 1.001 - Math.pow(2, -10 * t)),
