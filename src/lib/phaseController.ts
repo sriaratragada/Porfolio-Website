@@ -81,11 +81,11 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
       // The bus itself sits near the scene middle; keep the orbit anchored close
       // to that centre and stay much farther back so we clear the side walls.
       origin: [0, 3.0, 0],
-      radius: 20,
-      radiusStart: 10,
-      radiusEnd: 5,
-      y: 13,
-      yStart: 17,
+      radius: 10,
+      radiusStart: 5,
+      radiusEnd: 1,
+      y: 10,
+      yStart: 10,
       yEnd: 11,
       lookY: 4.0,
       lookYStart: 10.5,
