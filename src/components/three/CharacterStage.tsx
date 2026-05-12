@@ -224,7 +224,7 @@ function SpiderManModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[0, 1.5, 0]} title="Sri Atragada" phaseIndex={0} htmlScale={1.25} cardWidth="220px">
+      <InfoHotspot position={[0, 1.5, 0]} title="Sri Atragada" phaseIndex={0} htmlScale={0.75} cardWidth="420px">
         <div className="flex flex-col gap-4">
           <img src="/images/sri.jpg" alt="Sri Atragada" className="w-full h-40 object-cover rounded-lg border border-white/10" />
           <p>I am a Computer Science student at Stony Brook University with a minor in Finance. I build full-stack applications, scalable backend systems, and AI-driven platforms.</p>
