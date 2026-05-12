@@ -293,7 +293,7 @@ function BattleBusModel() {
       <group ref={modelRef}>
         <primitive object={scene} />
       </group>
-      <InfoHotspot position={[-10, 8, 4]} title="WHO I AM" phaseIndex={1} htmlScale={0.2} triggerScale={3.5} cardScale={2.8} instantVisibility cardWidth="500px">
+      <InfoHotspot position={[-13, 4.8, 4]} title="WHO I AM" phaseIndex={1} htmlScale={0.2} triggerScale={3.5} cardScale={2.8} instantVisibility cardWidth="500px">
         <div className="flex flex-col gap-4">
           <p className="text-base leading-relaxed">I am a Computer Science student who believes that technical skill is most effective when it is paired with a genuine sense of curiosity and a lighthearted perspective. While I spend a lot of time navigating the logic of systems and security, I make it a priority to bring a high-energy, approachable attitude to every project I take on. I value being the kind of person who is as easy to brainstorm with during a deadline as I am to talk to when the work is done. I find that keeping a sense of humor and staying open to new ideas helps me stay adaptable, allowing me to solve problems without losing sight of the people behind the technology. For me, the goal is to build things that are secure and functional, while remaining the kind of teammate who keeps the process engaging and collaborative.</p>
         </div>
