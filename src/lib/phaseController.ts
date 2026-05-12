@@ -76,27 +76,34 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
   // Phase 1 — Battle Bus: orbit inside the GLB sky around the bus at scene centre.
   {
     id: 'battlebus',
-    camera: {
-      type: 'orbit',
-      // The bus itself sits near the scene middle; keep the orbit anchored close
-      // to that centre and stay much farther back so we clear the side walls.
-      origin: [0, 3.0, 0],
-      radius: 2.8,
-      radiusStart: 3.2,
-      radiusEnd: 2.5,
-      y: 3.00,
-      yStart: 3.2,
-      yEnd: 3.2,
-      lookY: 2.0,
-      lookYStart: 2.0,
-      lookYEnd: 2.0,
-      angleStart: Math.PI * 0.78,
-      angleEnd: Math.PI * 0.08,
-      fov: 68,
-      lerpSpeed: 3.2,
-      fogDensity: 0.002,
-      descendingY: true,
-    },
+camera: {
+    type: 'orbit',
+    origin: [0, 3.0, 0],
+    
+    // Tightened radius range to keep the bus large in the frame
+    radius: 2.2,
+    radiusStart: 2.4,
+    radiusEnd: 2.0,
+    
+    // Physical Height - Lock this to the bus level
+    y: 3.2,
+    yStart: 3.2,
+    yEnd: 3.2,
+    
+    // Look Target - Move this UP to match Y so we look straight at the bus
+    lookY: 3.2,
+    lookYStart: 3.2, 
+    lookYEnd: 3.2,
+    
+    angleStart: Math.PI * 0.78,
+    angleEnd: Math.PI * 0.08,
+  
+    fov: 38,         
+    
+    lerpSpeed: 3.2,
+    fogDensity: 0.002,
+    descendingY: false, 
+},
   },
   // Phase 2 — Race Track: 120° sweeping orbit, descending camera
   {
