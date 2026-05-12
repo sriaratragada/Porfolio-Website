@@ -81,14 +81,14 @@ camera: {
     origin: [0, 3.0, 0],
     
     // Tightened radius range to keep the bus large in the frame
-    radius: 2.2,
+    radius: 2.7,
     radiusStart: 2.4,
     radiusEnd: 2.0,
     
     // Physical Height - Lock this to the bus level
-    y: 3.2,
-    yStart: 3.2,
-    yEnd: 3.2,
+    y: 3.0,
+    yStart: 3.0,
+    yEnd: 3.0,
     
     // Look Target - Move this UP to match Y so we look straight at the bus
     lookY: 3.2,
@@ -98,7 +98,7 @@ camera: {
     angleStart: Math.PI * 0.78,
     angleEnd: Math.PI * 0.08,
   
-    fov: 38,         
+    fov: 55,         
     
     lerpSpeed: 3.2,
     fogDensity: 0.002,
