@@ -79,7 +79,7 @@ export const PHASE_CONFIGS: readonly PhaseConfig[] = [
     camera: {
       type: 'orbit',
       origin: [0, 0, 0],
-      radius: 3.6,
+      radius: 2.8,
       y: 3.2,
       lookY: 3.2,
       angleStart: Math.PI * 0.78,
