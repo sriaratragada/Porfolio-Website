@@ -505,7 +505,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={pct(PHASES[1].start)} phaseEnd={pct(PHASES[1].end)}
         label="ABOUT ME" title={'WHO I\nAM'}
-        icon={<Sparkles size={14} />} align="left"
+        align="left"
       >
         <p>CS + Finance at Stony Brook University. I build full-stack applications, scalable backend systems, and AI-driven platforms. Click the orb to learn more.</p>
       </PhasePanel>
@@ -514,7 +514,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={pct(PHASES[2].start)} phaseEnd={pct(PHASES[2].end)}
         label="EXPERIENCE" title={'MY\nJOURNEY'}
-        icon={<Layers size={14} />} align="right"
+        align="right"
       >
         <p>From NLP pipelines at Stony Brook to AWS infrastructure at Atlas Legacy. Explore my work history by clicking the hotspots around the track.</p>
       </PhasePanel>
@@ -523,7 +523,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={pct(PHASES[3].start)} phaseEnd={pct(PHASES[3].end)}
         label="PROJECTS" title={'WHAT I\nBUILD'}
-        icon={<Code size={14} />} align="left"
+        align="left"
       >
         <p>Open-world RPGs, real-time AI fitness platforms, and low-latency C++ trading engines. Tap a glowing hotspot to dive into each project.</p>
       </PhasePanel>
@@ -532,7 +532,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={pct(PHASES[4].start)} phaseEnd={pct(PHASES[4].end)}
         label="SKILLS" title={'TECH\nSTACK'}
-        icon={<Cpu size={14} />} align="right"
+        align="right"
       >
         <div style={{ display: 'flex', flexDirection: 'column', gap: '10px', fontSize: '13px' }}>
           <div><span style={{ color: 'var(--noir-cyan)', letterSpacing: '0.15em', fontSize: '10px', fontWeight: 700 }}>LANGUAGES</span><br />Python · TypeScript · C++ · Java · SQL</div>
@@ -545,7 +545,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={pct(PHASES[5].start)} phaseEnd={pct(PHASES[5].end)}
         label="EXPLORE" title={'CATCH\nTHEM ALL'}
-        icon={<Mountain size={14} />} align="left"
+        align="left"
       >
         <p>Four glowing orbs drift through the enchanted forest — each one holds a piece of my technical story. Click all four to unlock something special.</p>
       </PhasePanel>
@@ -554,7 +554,7 @@ export default function ContentOverlay({ scrollEl }: { scrollEl: HTMLElement | n
         scrollEl={scrollEl}
         phaseStart={pct(PHASES[6].start)} phaseEnd={pct(PHASES[6].end)}
         label="CONTACT" title={"LET'S\nCONNECT"}
-        icon={<Rocket size={14} />} align="right"
+        align="right"
       >
         <p>The journey ends here — and the next one begins. I&apos;m always open to new opportunities, collaborations, and conversations. Reach out anytime.</p>
         <p style={{ marginTop: '12px', color: 'var(--noir-cyan)', fontSize: '13px' }}>sridharatragada@gmail.com</p>
