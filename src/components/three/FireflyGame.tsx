@@ -66,10 +66,10 @@ function Firefly({ data, index, onCatch, isCaught, phaseIndex }: { data: any, in
       {/* The caught card */}
       {isCaught && (
         <Html center transform sprite zIndexRange={[100, 0]} scale={0.45}>
-          <div className="flex flex-col bg-black/60 backdrop-blur-2xl border border-white/10 rounded-2xl p-6 text-white shadow-[0_16px_40px_rgba(0,0,0,0.8),inset_0_1px_0_rgba(255,255,255,0.2)] cursor-default transition-all duration-500 ease-out animate-in fade-in zoom-in-90" style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)' }}>
-            <h3 className="text-xl font-bold uppercase tracking-widest mb-3" style={{ color: data.color, textShadow: `0 0 20px ${data.color}80` }}>{data.title}</h3>
-            <p className="text-sm opacity-70 mb-4">{data.skills}</p>
-            <p className="text-sm font-light leading-relaxed text-white/80">{data.desc}</p>
+          <div style={{ width: '380px', fontFamily: 'var(--font-space-grotesk)', background: 'rgba(4,4,8,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.18)', padding: '22px 26px 24px', color: '#fff' }}>
+            <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>{data.title}</p>
+            <p style={{ fontSize: '11px', color: 'rgba(255,255,255,0.5)', marginBottom: '10px', letterSpacing: '0.05em' }}>{data.skills}</p>
+            <p style={{ fontSize: '13px', fontWeight: 300, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)' }}>{data.desc}</p>
           </div>
         </Html>
       )}
@@ -121,20 +121,21 @@ export function FireflyGame({ phaseIndex = 5 }: { phaseIndex?: number }) {
           {/* Placed at a fixed position in the photosphere so it feels anchored like a monument */}
           <group position={[0, -1, -6]}>
             <Html center transform sprite zIndexRange={[100, 0]} scale={1.2}>
-              <div 
-                className="flex flex-col items-center bg-black/80 backdrop-blur-3xl border border-white/20 rounded-3xl p-8 text-white shadow-[0_0_80px_rgba(255,255,255,0.3),inset_0_1px_0_rgba(255,255,255,0.5)] cursor-pointer hover:scale-105 transition-all duration-700 ease-out animate-in zoom-in-50 spin-in-12" 
-                style={{ fontFamily: 'var(--font-space-grotesk)' }} 
+              <div
+                style={{ fontFamily: 'var(--font-space-grotesk)', display: 'flex', flexDirection: 'column', alignItems: 'center', background: 'rgba(4,4,8,0.92)', backdropFilter: 'blur(20px)', WebkitBackdropFilter: 'blur(20px)', border: '1px solid rgba(255,255,255,0.18)', padding: '36px 44px', color: '#fff', cursor: 'pointer', transition: 'border-color 0.2s' }}
                 onClick={(e) => {
                   e.stopPropagation();
                   savePortfolioProgress(scrollStore.globalProgress);
                   router.push('/resume');
                 }}
+                onMouseEnter={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.5)')}
+                onMouseLeave={e => (e.currentTarget.style.borderColor = 'rgba(255,255,255,0.18)')}
               >
-                <div className="w-16 h-16 rounded-full bg-white flex items-center justify-center mb-4 shadow-[0_0_30px_rgba(255,255,255,0.8)]" style={{ animation: 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite' }}>
-                  <svg className="w-8 h-8 text-black" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
+                <div style={{ width: '48px', height: '48px', background: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px' }}>
+                  <svg style={{ width: '24px', height: '24px', color: '#000' }} fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" /></svg>
                 </div>
-                <h2 className="text-2xl font-bold uppercase tracking-widest text-transparent bg-clip-text bg-gradient-to-r from-white to-white/50 mb-2">Resume Unlocked</h2>
-                <p className="text-sm opacity-80">Click to view & download</p>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', marginBottom: '8px' }}>RESUME UNLOCKED</p>
+                <p style={{ fontSize: '13px', fontWeight: 300, color: 'rgba(255,255,255,0.6)' }}>Click to view & download</p>
               </div>
             </Html>
           </group>

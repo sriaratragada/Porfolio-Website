@@ -473,7 +473,7 @@ function HangarModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(wrapperRef, 6, cachedMats, true);
+  useFade(wrapperRef, 6, cachedMats, true, true);
 
   useFrame(() => {
     if (!wrapperRef.current?.visible) return;
