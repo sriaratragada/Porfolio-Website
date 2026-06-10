@@ -72,11 +72,29 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
             <div ref={triggerRef} style={{ transition: 'opacity 0.1s' }}>
               <button
                 onClick={(e) => { e.stopPropagation(); setIsOpen(true); }}
-                className="flex items-center gap-3 px-5 py-2.5 bg-gradient-to-r from-[#e62429] to-[#ff4444] hover:from-[#ff4444] hover:to-[#e62429] text-white rounded-full backdrop-blur-md border border-red-300/30 transition-all cursor-pointer shadow-[0_0_30px_rgba(230,36,41,0.5)] uppercase tracking-widest text-xs font-bold"
-                style={{ fontFamily: 'var(--font-space-grotesk)' }}
+                style={{
+                  fontFamily: 'var(--font-space-grotesk)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '10px',
+                  padding: '8px 18px',
+                  background: 'rgba(0,0,0,0.7)',
+                  color: '#fff',
+                  border: '1px solid rgba(255,255,255,0.35)',
+                  cursor: 'pointer',
+                  fontSize: '10px',
+                  fontWeight: 600,
+                  letterSpacing: '0.2em',
+                  textTransform: 'uppercase',
+                  backdropFilter: 'blur(8px)',
+                  transition: 'border-color 0.2s, background 0.2s',
+                  whiteSpace: 'nowrap',
+                }}
+                onMouseEnter={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.8)'; e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; }}
+                onMouseLeave={e => { e.currentTarget.style.borderColor = 'rgba(255,255,255,0.35)'; e.currentTarget.style.background = 'rgba(0,0,0,0.7)'; }}
               >
                 <span>{title}</span>
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
+                <svg width="12" height="12" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path strokeLinecap="square" strokeLinejoin="miter" strokeWidth={2} d="M14 5l7 7m0 0l-7 7m7-7H3" /></svg>
               </button>
             </div>
           </Html>
@@ -560,7 +578,7 @@ export default function CharacterStage() {
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Architected a fully playable 10,000 × 10,000 tile open-world RPG engine. Hundreds of autonomous NPC agents powered by RAG-based persistent memory.</p>
-            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#e62429', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
+            <a href="https://github.com/sriaratragada/Chronicle-Game" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
           </div>
         </InfoHotspot>
         <InfoHotspot position={[4, 0, 0]} title="FORMFLOW AI" phaseIndex={3} htmlScale={0.42}>
@@ -571,7 +589,19 @@ export default function CharacterStage() {
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Real-time AI fitness platform scoring workout form rep-by-rep via webcam, with multiplayer leaderboards. <span style={{ color: '#fbbf24', fontWeight: 600 }}>🏆 2nd Place — Code-A-Site Hackathon</span></p>
-            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#e62429', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
+            <a href="https://github.com/FormFlow26/CodeASite26Project/" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
+          </div>
+        </InfoHotspot>
+
+        <InfoHotspot position={[4, 0, -8]} title="FINOPS K8S" phaseIndex={3} htmlScale={0.42}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
+              {['Python', 'Kubernetes', 'Prometheus', 'FinOps'].map(t => (
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fde68a' }}>{t}</span>
+              ))}
+            </div>
+            <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Kubernetes controller that watches Prometheus, detects idle windows, cordons underutilized nodes, and scales workloads to zero — then pre-warms before business hours. Tracks real dollar savings.</p>
+            <a href="https://github.com/sriaratragada/FinOps-Kubernetes-Cluster-Controller" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
           </div>
         </InfoHotspot>
 
@@ -583,7 +613,7 @@ export default function CharacterStage() {
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Low-latency matching engine with Price-Time Priority (FIFO) and Pro-Rata allocation. Deterministic sub-microsecond order execution using lock-free data structures.</p>
-            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: '#e62429', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
+            <a href="https://github.com/sriaratragada/HighFrequencyOrderMatching" target="_blank" rel="noopener noreferrer" style={{ fontSize: '11px', color: 'rgba(255,255,255,0.6)', fontWeight: 700, letterSpacing: '0.1em', textDecoration: 'none', display: 'flex', alignItems: 'center', gap: '4px' }}>VIEW REPO ➔</a>
           </div>
         </InfoHotspot>
       </SkyboxSphere>
