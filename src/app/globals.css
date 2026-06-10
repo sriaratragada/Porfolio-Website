@@ -44,49 +44,13 @@
   99%           { opacity: 0.88; }
 }
 
-/* ── Hero name — outlined transparent text + red glow ───────────────── */
+/* ── Hero name — clean outlined white text ───────────────── */
 .hero-name-outlined {
   font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
   font-weight: 700;
   color: transparent;
-  -webkit-text-stroke: 1.5px rgba(240,240,240,0.96);
-  text-shadow:
-    0 0 28px var(--noir-red-glow),
-    0 0 56px rgba(230,36,41,0.28),
-    2px 2px 0 rgba(230,36,41,0.4);
-  animation: glitch-idle 8s infinite;
-  letter-spacing: 0.01em;
-}
-.hero-name-wrap {
-  position: relative;
-  display: inline-block;
-}
-/* Red chromatic ghost */
-.hero-name-wrap::before {
-  content: attr(data-text);
-  position: absolute;
-  inset: 0;
-  font-family: var(--font-space-grotesk), 'Space Grotesk', sans-serif;
-  font-weight: 700;
-  font-size: inherit;
-  line-height: inherit;
-  letter-spacing: inherit;
-  white-space: pre-line;
-  color: transparent;
-  -webkit-text-stroke: 1.5px var(--spider-red);
-  animation: glitch-red 8s infinite;
-  pointer-events: none;
-}
-/* Red accent stripe below heading */
-.hero-name-wrap::after {
-  content: '';
-  position: absolute;
-  bottom: -8px;
-  left: 0;
-  width: 72px;
-  height: 2px;
-  background: var(--spider-red);
-  box-shadow: 0 0 10px var(--spider-red), 0 0 20px rgba(230,36,41,0.4);
+  -webkit-text-stroke: 1.5px rgba(255,255,255,0.92);
+  letter-spacing: -0.02em;
 }
 
 /* ── Tagline — JetBrains Mono, electric cyan ──────────────────── */
@@ -146,7 +110,7 @@ html {
 }
 
 body {
-  background: radial-gradient(ellipse at 50% 30%, #0d1235 0%, #060610 60%, #000 100%);
+  background: #000;
   color: var(--spider-white);
   font-family: var(--font-space-grotesk), -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   overflow-x: hidden;
@@ -247,31 +211,12 @@ body {
   }
 }
 
-/* ── Elegant Gradient Typography ────────────────────────────────────────── */
-.text-gradient-cyan {
-  background: linear-gradient(135deg, #00e5ff 0%, #0077ff 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
-}
-
-.text-gradient-rose {
-  background: linear-gradient(135deg, #ff0f7b 0%, #f89b29 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
-  display: inline-block;
-}
-
+/* ── Typography — plain white, no gradients ─────────────────────────── */
+.text-gradient-cyan,
+.text-gradient-rose,
 .text-gradient-silver {
-  background: linear-gradient(135deg, #ffffff 0%, #a0a5b0 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  color: transparent;
+  color: #fff;
+  -webkit-text-fill-color: #fff;
   display: inline-block;
 }
 

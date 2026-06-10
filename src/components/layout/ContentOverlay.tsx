@@ -12,7 +12,6 @@ import Link from 'next/link';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
-import { Sparkles, Code, Cpu, Layers, Mountain, Rocket } from 'lucide-react';
 import { scrollStore, PHASES, TRANSITIONS } from '@/lib/scrollStore';
 import { useLenis } from '@/components/layout/LenisProvider';
 
@@ -117,16 +116,15 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, align = 'lef
           gap: '8px',
           marginBottom: '10px',
           opacity: 0,
-          color: 'var(--noir-cyan)',
         }}
       >
-        {icon && <div className="text-cyan-400">{icon}</div>}
         <p
           style={{
             fontFamily: 'var(--font-space-grotesk)',
-            fontSize: '11px',
+            fontSize: '10px',
             fontWeight: 600,
-            letterSpacing: '0.28em',
+            letterSpacing: '0.32em',
+            color: 'rgba(255,255,255,0.38)',
             margin: 0,
           }}
         >
@@ -136,14 +134,14 @@ function PhasePanel({ scrollEl, phaseStart, phaseEnd, label, title, align = 'lef
 
       <h2
         ref={titleRef}
-        className="text-gradient-cyan"
         style={{
           fontFamily: 'var(--font-space-grotesk)',
           fontWeight: 700,
           fontSize: 'clamp(38px, 5vw, 64px)',
           lineHeight: 0.92,
           margin: 0,
-          letterSpacing: '-0.02em',
+          letterSpacing: '-0.03em',
+          color: '#fff',
           opacity: 0,
           whiteSpace: 'pre-line',
         }}
@@ -215,9 +213,8 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
         zIndex: 20,
       }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '14px' }}>
-        <Sparkles size={14} className="text-rose-400" />
-        <p ref={labelRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '12px', fontWeight: 600, letterSpacing: '0.25em', color: 'var(--noir-silver)', margin: 0 }}>
+      <div style={{ marginBottom: '14px' }}>
+        <p ref={labelRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontSize: '10px', fontWeight: 600, letterSpacing: '0.32em', color: 'rgba(255,255,255,0.38)', margin: 0 }}>
           PORTFOLIO — 2026
         </p>
       </div>
@@ -225,15 +222,15 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
       <div style={{ fontSize: 'clamp(44px, 7vw, 96px)', lineHeight: 0.95 }}>
         <h1
           ref={nameRef}
-          className="text-gradient-rose"
-          style={{ fontSize: 'inherit', lineHeight: 'inherit', fontFamily: 'var(--font-space-grotesk)', fontWeight: 700, margin: 0, letterSpacing: '-0.02em' }}
+          className="hero-name-outlined"
+          style={{ fontSize: 'inherit', lineHeight: 'inherit', margin: 0 }}
         >
           SRI<br />ATRAGADA
         </h1>
       </div>
 
-      <p ref={roleRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 500, fontSize: 'clamp(12px, 1.4vw, 15px)', color: 'var(--noir-cyan)', letterSpacing: '0.05em', marginTop: '24px' }}>
-        Developer<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Engineer<span className="sep" style={{ color: 'var(--spider-red)', margin: '0 8px' }}>/</span>Builder
+      <p ref={roleRef} style={{ fontFamily: 'var(--font-space-grotesk)', fontWeight: 400, fontSize: 'clamp(12px, 1.4vw, 14px)', color: 'rgba(255,255,255,0.45)', letterSpacing: '0.12em', marginTop: '24px' }}>
+        Developer<span style={{ color: 'rgba(255,255,255,0.2)', margin: '0 10px' }}>/</span>Engineer<span style={{ color: 'rgba(255,255,255,0.2)', margin: '0 10px' }}>/</span>Builder
       </p>
 
       <div
@@ -242,13 +239,22 @@ function HeroPanel({ scrollEl }: { scrollEl: HTMLElement | null }) {
       >
         <button
           onClick={() => lenis?.scrollTo(document.documentElement.scrollHeight * PHASES[1].start)}
-          className="group relative overflow-hidden rounded-full border border-white/20 bg-white/5 px-8 py-3 text-sm font-semibold tracking-widest text-white backdrop-blur-md transition-all hover:border-white/40 hover:bg-white/10"
-          style={{ fontFamily: 'var(--font-space-grotesk)' }}
+          style={{
+            fontFamily: 'var(--font-space-grotesk)',
+            fontSize: '11px',
+            fontWeight: 600,
+            letterSpacing: '0.22em',
+            color: '#fff',
+            background: 'transparent',
+            border: '1px solid rgba(255,255,255,0.3)',
+            padding: '12px 28px',
+            cursor: 'pointer',
+            transition: 'border-color 0.2s, background 0.2s',
+          }}
+          onMouseEnter={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.7)'; (e.currentTarget as HTMLButtonElement).style.background = 'rgba(255,255,255,0.05)'; }}
+          onMouseLeave={e => { (e.currentTarget as HTMLButtonElement).style.borderColor = 'rgba(255,255,255,0.3)'; (e.currentTarget as HTMLButtonElement).style.background = 'transparent'; }}
         >
-          <span className="relative z-10 flex items-center gap-2">
-            EXPLORE THE UNIVERSE
-          </span>
-          <span className="absolute inset-0 z-0 scale-x-0 rounded-full bg-gradient-to-r from-rose-500 to-orange-500 opacity-20 transition-transform duration-500 group-hover:scale-x-100" />
+          EXPLORE THE UNIVERSE
         </button>
       </div>
     </div>
@@ -327,7 +333,7 @@ function ScrollIndicator({ scrollEl }: { scrollEl: HTMLElement | null }) {
       <span style={{ fontFamily: 'var(--font-bebas)', fontSize: '10px', letterSpacing: '0.3em', color: 'rgba(240,240,240,0.25)', writingMode: 'vertical-rl' }}>
         SCROLL
       </span>
-      <div style={{ width: '1px', height: '40px', background: 'linear-gradient(to bottom, rgba(230,36,41,0.6), transparent)', animation: 'pulse 2s ease-in-out infinite' }} />
+      <div style={{ width: '1px', height: '40px', background: 'linear-gradient(to bottom, rgba(255,255,255,0.5), transparent)' }} />
     </div>
   );
 }
@@ -351,7 +357,7 @@ function PhaseDots({ scrollEl }: { scrollEl: HTMLElement | null }) {
         scrub: 0.5,
         onUpdate: (self) => {
           if (dot) {
-            dot.style.background = self.progress > 0 && self.progress < 1 ? '#e62429' : 'rgba(255,255,255,0.3)';
+            dot.style.background = self.progress > 0 && self.progress < 1 ? '#fff' : 'rgba(255,255,255,0.2)';
           }
         },
       });
@@ -368,7 +374,7 @@ function PhaseDots({ scrollEl }: { scrollEl: HTMLElement | null }) {
           ref={(node) => {
             dotRefs.current[i] = node;
           }}
-          style={{ width: '6px', height: '6px', borderRadius: '50%', background: i === 0 ? '#e62429' : 'rgba(255,255,255,0.3)', transition: 'background 0.3s' }}
+          style={{ width: '2px', height: '16px', background: i === 0 ? '#fff' : 'rgba(255,255,255,0.2)', transition: 'background 0.3s' }}
         />
       ))}
     </div>
@@ -407,25 +413,16 @@ function DragIndicator() {
       }}
       className="animate-pulse"
     >
-      <div style={{
-        width: '24px',
-        height: '24px',
-        border: '2px solid rgba(255,255,255,0.8)',
-        borderRadius: '50%',
-        display: 'flex',
-        justifyContent: 'center',
-        alignItems: 'center',
-      }}>
-        <div style={{ width: '4px', height: '4px', background: 'rgba(255,255,255,0.8)', borderRadius: '50%' }} />
-      </div>
       <span style={{
-        fontFamily: 'var(--font-bebas)',
-        letterSpacing: '0.1em',
-        fontSize: '14px',
-        color: 'rgba(255,255,255,0.8)',
+        fontFamily: 'var(--font-space-grotesk)',
+        fontSize: '10px',
+        fontWeight: 600,
+        letterSpacing: '0.28em',
+        color: 'rgba(255,255,255,0.4)',
       }}>
         DRAG TO EXPLORE
       </span>
+      <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.25)' }} />
     </div>
   );
 }
@@ -475,26 +472,13 @@ function FireflyHint({ scrollEl }: { scrollEl: HTMLElement | null }) {
         opacity: 0,
       }}
     >
-      <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-        {['#3b82f6', '#ef4444', '#10b981', '#eab308'].map((color) => (
-          <div
-            key={color}
-            style={{
-              width: '10px', height: '10px', borderRadius: '50%',
-              background: color,
-              boxShadow: `0 0 8px ${color}, 0 0 16px ${color}`,
-              animation: 'pulse 2s ease-in-out infinite',
-            }}
-          />
-        ))}
-      </div>
       <span
         style={{
           fontFamily: 'var(--font-space-grotesk)',
-          fontSize: '11px',
+          fontSize: '10px',
           fontWeight: 600,
-          letterSpacing: '0.22em',
-          color: 'rgba(255,255,255,0.85)',
+          letterSpacing: '0.28em',
+          color: 'rgba(255,255,255,0.4)',
           whiteSpace: 'nowrap',
         }}
       >
