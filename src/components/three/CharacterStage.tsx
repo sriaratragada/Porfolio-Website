@@ -109,24 +109,22 @@ function InfoHotspot({ position, title, children, rotation, phaseIndex, htmlScal
               style={{
                 width: effectiveCardWidth,
                 fontFamily: 'var(--font-space-grotesk)',
-                background: 'rgba(6, 7, 14, 0.82)',
-                backdropFilter: 'blur(24px)',
-                WebkitBackdropFilter: 'blur(24px)',
-                borderRadius: '24px',
-                border: '1px solid rgba(255,255,255,0.13)',
-                boxShadow: '0 20px 60px rgba(0,0,0,0.7), inset 0 1px 0 rgba(255,255,255,0.08)',
-                padding: '28px 32px 30px',
+                background: 'rgba(4, 4, 8, 0.92)',
+                backdropFilter: 'blur(20px)',
+                WebkitBackdropFilter: 'blur(20px)',
+                border: '1px solid rgba(255,255,255,0.18)',
+                padding: '22px 26px 24px',
               }}
               onClick={(e) => e.stopPropagation()}
             >
-              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '18px', paddingBottom: '14px', borderBottom: '1px solid rgba(255,255,255,0.09)' }}>
-                <p style={{ fontSize: '14px', fontWeight: 700, letterSpacing: '0.26em', color: 'var(--noir-cyan)', textTransform: 'uppercase', margin: 0 }}>{title}</p>
+              <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: '14px', paddingBottom: '12px', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                <p style={{ fontSize: '10px', fontWeight: 700, letterSpacing: '0.28em', color: 'rgba(255,255,255,0.45)', textTransform: 'uppercase', margin: 0 }}>{title}</p>
                 <button
                   onClick={(e) => { e.stopPropagation(); setIsOpen(false); }}
-                  style={{ fontSize: '18px', lineHeight: 1, background: 'none', border: 'none', padding: '4px 8px', color: 'rgba(255,255,255,0.28)', cursor: 'pointer' }}
+                  style={{ fontSize: '14px', lineHeight: 1, background: 'none', border: 'none', padding: '2px 6px', color: 'rgba(255,255,255,0.25)', cursor: 'pointer' }}
                 >✕</button>
               </div>
-              <div style={{ fontSize: '20px', fontWeight: 300, lineHeight: 1.8, color: 'rgba(255,255,255,0.82)' }}>
+              <div style={{ fontSize: '13px', fontWeight: 300, lineHeight: 1.7, color: 'rgba(255,255,255,0.8)' }}>
                 {children}
               </div>
             </div>
@@ -148,6 +146,7 @@ function useFade(
 ) {
   const lastOpacity = useRef(-1);
   const wasVisible = useRef(false);
+  const lastMatsLength = useRef(0); // detect when useEffect populates materials late
 
   useFrame(() => {
     if (!groupRef.current) return;
@@ -157,10 +156,14 @@ function useFade(
       : phaseOpacity(phaseIndex, gp, 0.06);
 
     const nowVisible = opacity > 0.001;
+    const matsChanged = matsRef.current.length !== lastMatsLength.current;
+
     if (
+      matsChanged ||
       wasVisible.current !== nowVisible ||
       (nowVisible && Math.abs(opacity - lastOpacity.current) > 0.002)
     ) {
+      lastMatsLength.current = matsRef.current.length;
       lastOpacity.current = opacity;
       wasVisible.current = nowVisible;
       groupRef.current.visible = nowVisible;
@@ -574,7 +577,7 @@ export default function CharacterStage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
               {['React', 'Python', 'Zustand', 'ChromaDB', 'RAG'].map(t => (
-                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(96,165,250,0.15)', border: '1px solid rgba(96,165,250,0.3)', color: '#93c5fd' }}>{t}</span>
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.7)' }}>{t}</span>
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Architected a fully playable 10,000 × 10,000 tile open-world RPG engine. Hundreds of autonomous NPC agents powered by RAG-based persistent memory.</p>
@@ -585,7 +588,7 @@ export default function CharacterStage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
               {['JavaScript', 'MediaPipe', 'Socket.IO', 'MongoDB'].map(t => (
-                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(52,211,153,0.15)', border: '1px solid rgba(52,211,153,0.3)', color: '#6ee7b7' }}>{t}</span>
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.7)' }}>{t}</span>
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Real-time AI fitness platform scoring workout form rep-by-rep via webcam, with multiplayer leaderboards. <span style={{ color: '#fbbf24', fontWeight: 600 }}>🏆 2nd Place — Code-A-Site Hackathon</span></p>
@@ -597,7 +600,7 @@ export default function CharacterStage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
               {['Python', 'Kubernetes', 'Prometheus', 'FinOps'].map(t => (
-                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(251,191,36,0.15)', border: '1px solid rgba(251,191,36,0.3)', color: '#fde68a' }}>{t}</span>
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.7)' }}>{t}</span>
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Kubernetes controller that watches Prometheus, detects idle windows, cordons underutilized nodes, and scales workloads to zero — then pre-warms before business hours. Tracks real dollar savings.</p>
@@ -609,7 +612,7 @@ export default function CharacterStage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
               {['C++', 'CMake', 'GoogleTest', 'Lock-free'].map(t => (
-                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', borderRadius: '100px', background: 'rgba(248,113,113,0.15)', border: '1px solid rgba(248,113,113,0.3)', color: '#fca5a5' }}>{t}</span>
+                <span key={t} style={{ fontSize: '10px', padding: '2px 8px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.7)' }}>{t}</span>
               ))}
             </div>
             <p style={{ fontSize: '12px', lineHeight: 1.6, opacity: 0.82 }}>Low-latency matching engine with Price-Time Priority (FIFO) and Pro-Rata allocation. Deterministic sub-microsecond order execution using lock-free data structures.</p>
@@ -638,7 +641,7 @@ export default function CharacterStage() {
                     <p style={{ fontSize: '9px', fontWeight: 700, letterSpacing: '0.2em', opacity: 0.45, marginBottom: '6px' }}>{g.label}</p>
                     <div style={{ display: 'flex', flexWrap: 'wrap', gap: '5px' }}>
                       {g.items.map(s => (
-                        <span key={s} style={{ fontSize: '11px', padding: '3px 9px', borderRadius: '100px', background: `${g.color}18`, border: `1px solid ${g.color}35`, color: g.color, fontWeight: 500 }}>{s}</span>
+                        <span key={s} style={{ fontSize: '11px', padding: '3px 9px', background: 'rgba(255,255,255,0.06)', border: '1px solid rgba(255,255,255,0.18)', color: 'rgba(255,255,255,0.75)', fontWeight: 500 }}>{s}</span>
                       ))}
                     </div>
                   </div>
