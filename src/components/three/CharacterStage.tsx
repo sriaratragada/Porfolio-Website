@@ -4,7 +4,7 @@
 // Added InfoHotspot for interactive 3D UX.
 // ─────────────────────────────────────────────────────────────────────────────
 
-import { useRef, useEffect, useMemo, useState } from 'react';
+import { useRef, useEffect, useMemo, useState, Suspense } from 'react';
 import { useFrame, useLoader, useThree } from '@react-three/fiber';
 import { useGLTF, Html, Float } from '@react-three/drei';
 import * as THREE from 'three';
@@ -460,8 +460,8 @@ function HangarModel() {
           map: tex,
           side: anyMat.side ?? THREE.FrontSide,
           transparent: true,
-          opacity: 1,
-          depthWrite: false,  // restored by useFade when fully opaque
+          opacity: 0,
+          depthWrite: false,
         });
 
         newMats.push(basicMat);
@@ -473,13 +473,22 @@ function HangarModel() {
     cachedMats.current = mats;
   }, [scene]);
 
-  useFade(wrapperRef, 6, cachedMats, true, true);
-
   useFrame(() => {
-    if (!wrapperRef.current?.visible) return;
     const gp = scrollStore.globalProgress;
+    const active = computePhaseActiveOpacity(6, gp) > 0;
+    const opacity = active ? 1 : 0;
+
+    if (wrapperRef.current) {
+      wrapperRef.current.visible = active;
+    }
+    for (const m of cachedMats.current) {
+      m.opacity = opacity;
+      m.depthWrite = active;
+    }
+
+    if (!active || !modelRef.current) return;
     const pp = phaseProgress(6, gp);
-    modelRef.current!.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
+    modelRef.current.scale.setScalar(THREE.MathUtils.lerp(0.98, 1.02, pp));
   });
 
   return (
@@ -565,7 +574,9 @@ export default function CharacterStage() {
       <SpiderManModel />
       <BattleBusModel />
       <RaceTrackModel />
-      <HangarModel />
+      <Suspense fallback={null}>
+        <HangarModel />
+      </Suspense>
 
       <SkyboxSphere
         phaseIndex={3}
